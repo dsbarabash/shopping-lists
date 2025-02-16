@@ -1,9 +1,7 @@
 package model
 
 import (
-	"crypto/rand"
-	"fmt"
-	"log"
+	"github.com/google/uuid"
 	"time"
 )
 
@@ -22,16 +20,9 @@ type ShoppingList struct {
 }
 
 func NewShoppingList(title string, userId string) ShoppingList {
-	b := make([]byte, 16)
-	_, err := rand.Read(b)
-	if err != nil {
-		log.Fatal(err)
-	}
-	uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
-		b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
-
+	id := uuid.New()
 	return ShoppingList{
-		id:        uuid,
+		id:        id.String(),
 		title:     title,
 		userId:    userId,
 		createdAt: time.Now(),
@@ -66,16 +57,9 @@ type Item struct {
 }
 
 func NewItem(title string, comment string, userId string, shoppingListId string) Item {
-	b := make([]byte, 16)
-	_, err := rand.Read(b)
-	if err != nil {
-		log.Fatal(err)
-	}
-	uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
-		b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
-
+	id := uuid.New()
 	return Item{
-		id:             uuid,
+		id:             id.String(),
 		title:          title,
 		comment:        comment,
 		isDone:         false,
