@@ -6,7 +6,7 @@ import (
 )
 
 type ShoppingLists interface {
-	UpdateShoppingList(string, []string) ShoppingList
+	UpdateShoppingList(string, []string)
 }
 
 type ShoppingList struct {
@@ -19,9 +19,9 @@ type ShoppingList struct {
 	state     State
 }
 
-func NewShoppingList(title string, userId string) ShoppingList {
+func NewShoppingList(title string, userId string) *ShoppingList {
 	id := uuid.New()
-	return ShoppingList{
+	return &ShoppingList{
 		id:        id.String(),
 		title:     title,
 		userId:    userId,
@@ -32,17 +32,16 @@ func NewShoppingList(title string, userId string) ShoppingList {
 	}
 }
 
-func (s ShoppingList) UpdateShoppingList(title string, items []string) ShoppingList {
+func (s *ShoppingList) UpdateShoppingList(title string, items []string) {
 	s.title = title
 	s.updatedAt = time.Now()
 	for _, i := range items {
 		s.items = append(s.items, i)
 	}
-	return s
 }
 
 type Items interface {
-	UpdateItem(string, string, bool) Item
+	UpdateItem(string, string, bool)
 }
 
 type Item struct {
@@ -56,9 +55,9 @@ type Item struct {
 	ShoppingListId string
 }
 
-func NewItem(title string, comment string, userId string, shoppingListId string) Item {
+func NewItem(title string, comment string, userId string, shoppingListId string) *Item {
 	id := uuid.New()
-	return Item{
+	return &Item{
 		id:             id.String(),
 		title:          title,
 		comment:        comment,
@@ -70,10 +69,9 @@ func NewItem(title string, comment string, userId string, shoppingListId string)
 	}
 }
 
-func (i Item) UpdateItem(title string, comment string, isDone bool) Item {
+func (i *Item) UpdateItem(title string, comment string, isDone bool) {
 	i.title = title
 	i.comment = comment
 	i.isDone = isDone
 	i.updatedAt = time.Now()
-	return i
 }
