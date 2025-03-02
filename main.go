@@ -8,6 +8,6 @@ import (
 func main() {
 	NewList := service.CreateShoppingList("test_list", "test_user")
 	repository.CheckInterface(NewList)
-	NewItem := service.CreateItem("test_item", "test_comment", "test_user", "")
+	NewItem := service.CreateItem("test_item", "test_comment", "test_user", "123")
 	repository.CheckInterface(NewItem)
 }
