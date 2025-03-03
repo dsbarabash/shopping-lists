@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/dsbarabash/shopping-lists/internal/service"
 	"sync"
@@ -9,29 +10,66 @@ import (
 
 func main() {
 	ch := make(chan interface{})
-	stop := time.NewTimer(10 * time.Second)
+
 	defer close(ch)
-	logging := time.NewTicker(time.Millisecond * 200)
-	tick := time.NewTicker(time.Millisecond * 150)
-	defer tick.Stop() // освободим ресурсы, при завершении работы функции
-	defer logging.Stop()
+	ctx := context.Background()
+	ctxWithTimeout, cancelFunction := context.WithTimeout(ctx, time.Duration(1550)*time.Millisecond)
+
+	defer func() {
+		cancelFunction()
+	}()
+
+	wg := new(sync.WaitGroup)
+	wg.Add(3)
+
+	go func() {
+		generator(ctxWithTimeout, ch, time.Millisecond*200)
+		wg.Done()
+	}()
+	go func() {
+		asyncStore(ctxWithTimeout, ch)
+		wg.Done()
+	}()
+	go func() {
+		asyncLogger(ctxWithTimeout, time.Millisecond*150)
+		wg.Done()
+	}()
+	wg.Wait()
+
+}
+
+func generator(ctx context.Context, ch chan any, d time.Duration) {
+	ticker := time.NewTicker(d)
 	for {
 		select {
-		case <-stop.C:
-			// stop - Timer, который через 10 секунд даст сигнал завершить работу
-
+		case <-ctx.Done():
 			return
-		case <-tick.C:
-			// tick - Ticker, посылающий сигнал выполнить работу каждые 150 миллисекунд
-			wg := new(sync.WaitGroup)
-			wg.Add(2)
-			go service.CreateRandomStructs(ch)
+		case <-ticker.C:
+			ch <- service.CreateRandomStructs()
+		}
+	}
+}
 
-			go repository.CheckInterface2(ch)
-			wg.Done()
-		case <-logging.C:
-			// tick - Ticker, посылающий сигнал выполнить лоигрвоание каждые 200 миллисекунд
-			go repository.LoggingSlice()
+func asyncStore(ctx context.Context, ch chan any) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case data := <-ch:
+			repository.CheckInterface(data)
+		}
+	}
+}
+
+func asyncLogger(ctx context.Context, d time.Duration) {
+	ticker := time.NewTicker(d)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			repository.LoggingSlice()
 		}
 	}
 }

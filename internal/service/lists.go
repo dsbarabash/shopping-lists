@@ -1,28 +1,25 @@
 package service
 
 import (
-	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/model"
 	"math/rand/v2"
 	"strings"
 )
 
-func CreateRandomStructs(ch chan<- interface{}) {
+func CreateRandomStructs() any {
 	rnd := rand.IntN(100)
+	var result any
+	var err error
 	if rnd%2 == 0 {
-		ShoppingList, err := model.NewShoppingList(randomSLData())
-		if err != nil {
-			panic(err)
-		}
-		ch <- ShoppingList
-		fmt.Println()
+		result, err = model.NewShoppingList(randomSLData())
+
 	} else {
-		Item, err := model.NewItem(randomIData())
-		if err != nil {
-			panic(err)
-		}
-		ch <- Item
+		result, err = model.NewItem(randomIData())
 	}
+	if err != nil {
+		panic(err)
+	}
+	return result
 }
 
 func randomSLData() (string, string) {
