@@ -32,7 +32,7 @@ func LoggingSlice() {
 	mu := sync.Mutex{}
 	if len(ShoppingListSlice) != lenSLSlice {
 		mu.Lock()
-		for i := len(ShoppingListSlice) - 1; i < len(ShoppingListSlice); i++ {
+		for i := lenSLSlice; i < len(ShoppingListSlice); i++ {
 			log.Println(ShoppingListSlice[i])
 		}
 		lenSLSlice = len(ShoppingListSlice)
@@ -40,7 +40,7 @@ func LoggingSlice() {
 	}
 	if len(ItemSlice) != lenISlice {
 		mu.Lock()
-		for i := len(ItemSlice) - 1; i < len(ItemSlice); i++ {
+		for i := lenISlice; i < len(ItemSlice); i++ {
 			log.Println(ItemSlice[i])
 		}
 		lenISlice = len(ItemSlice)

@@ -23,7 +23,7 @@ func main() {
 	wg.Add(3)
 
 	go func() {
-		generator(ctxWithTimeout, ch, time.Millisecond*200)
+		generator(ctxWithTimeout, ch, time.Millisecond*100)
 		wg.Done()
 	}()
 	go func() {
@@ -31,7 +31,7 @@ func main() {
 		wg.Done()
 	}()
 	go func() {
-		asyncLogger(ctxWithTimeout, time.Millisecond*150)
+		asyncLogger(ctxWithTimeout, time.Millisecond*200)
 		wg.Done()
 	}()
 	wg.Wait()
