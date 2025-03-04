@@ -11,9 +11,9 @@ var ShoppingListSlice = make([]*model.ShoppingList, 0)
 var ItemSlice = make([]*model.Item, 0)
 var lenSLSlice = len(ShoppingListSlice)
 var lenISlice = len(ItemSlice)
+var mu = sync.Mutex{}
 
 func CheckInterface(arg interface{}) {
-	mu := sync.Mutex{}
 	mu.Lock()
 	switch arg.(type) {
 	case model.ShoppingLists:
@@ -23,27 +23,24 @@ func CheckInterface(arg interface{}) {
 	default:
 		fmt.Println("Неизвестный тип ")
 	}
-	mu.Unlock()
 	fmt.Println("ShoppingList: ", ShoppingListSlice)
 	fmt.Println("Item: ", ItemSlice)
+	mu.Unlock()
 }
 
 func LoggingSlice() {
-	mu := sync.Mutex{}
+	mu.Lock()
 	if len(ShoppingListSlice) != lenSLSlice {
-		mu.Lock()
 		for i := lenSLSlice; i < len(ShoppingListSlice); i++ {
 			log.Println(ShoppingListSlice[i])
 		}
 		lenSLSlice = len(ShoppingListSlice)
-		mu.Unlock()
 	}
 	if len(ItemSlice) != lenISlice {
-		mu.Lock()
 		for i := lenISlice; i < len(ItemSlice); i++ {
 			log.Println(ItemSlice[i])
 		}
 		lenISlice = len(ItemSlice)
-		mu.Unlock()
 	}
+	mu.Unlock()
 }
