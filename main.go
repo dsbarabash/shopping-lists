@@ -16,7 +16,7 @@ func main() {
 	ch := make(chan interface{})
 
 	defer close(ch)
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGINT)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
 
 	wg := new(sync.WaitGroup)
