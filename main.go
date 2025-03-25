@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+	repository.FillSlices()
 	ch := make(chan interface{})
 
 	defer close(ch)
