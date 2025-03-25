@@ -114,7 +114,7 @@ func addItemToFile(arg interface{}) {
 			}
 		} else {
 			// Если файл не пуст, то заменчем последнюю закрывающую скобку массива на запятую
-			if _, err := f.Seek(-2, io.SeekEnd); err != nil {
+			if _, err := f.Seek(-1, io.SeekEnd); err != nil {
 				log.Fatal(err)
 			}
 			if _, err := f.WriteString(","); err != nil {
@@ -158,7 +158,7 @@ func addItemToFile(arg interface{}) {
 			}
 		} else {
 			// Если файл не пуст, то заменчем последнюю закрывающую скобку массива на запятую
-			if _, err := f.Seek(-2, io.SeekEnd); err != nil {
+			if _, err := f.Seek(-1, io.SeekEnd); err != nil {
 				log.Fatal(err)
 			}
 			if _, err := f.WriteString(","); err != nil {
