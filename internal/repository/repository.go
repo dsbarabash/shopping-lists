@@ -95,7 +95,12 @@ func addItemToFile(arg interface{}) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer f.Close()
+		defer func(f *os.File) {
+			err := f.Close()
+			if err != nil {
+
+			}
+		}(f)
 		// Перемещаемся в конец файла
 		stat, err := f.Stat()
 		if err != nil {
@@ -134,7 +139,12 @@ func addItemToFile(arg interface{}) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer f.Close()
+		defer func(f *os.File) {
+			err := f.Close()
+			if err != nil {
+
+			}
+		}(f)
 		// Перемещаемся в конец файла
 		stat, err := f.Stat()
 		if err != nil {
