@@ -10,44 +10,54 @@ import (
 	"sync"
 )
 
-var ShoppingListSlice = make([]*model.ShoppingList, 0)
-var ItemSlice = make([]*model.Item, 0)
-var lenSLSlice = len(ShoppingListSlice)
-var lenISlice = len(ItemSlice)
 var mu = sync.Mutex{}
 
+type SLSlice struct {
+	mu      sync.Mutex
+	SLSlice []*model.ShoppingList
+}
+type ISlice struct {
+	mu     sync.Mutex
+	ISlice []*model.Item
+}
+
+var ShoppingListSlice = SLSlice{
+	SLSlice: make([]*model.ShoppingList, 0),
+}
+var ItemSlice = ISlice{
+	ISlice: make([]*model.Item, 0),
+}
+var lenSLSlice = len(ShoppingListSlice.SLSlice)
+var lenISlice = len(ItemSlice.ISlice)
+
 func CheckInterface(arg interface{}) {
-	mu.Lock()
 	switch arg.(type) {
 	case model.ShoppingLists:
-		ShoppingListSlice = append(ShoppingListSlice, arg.(*model.ShoppingList))
+		ShoppingListSlice.SLSlice = append(ShoppingListSlice.SLSlice, arg.(*model.ShoppingList))
 		addItemToFile(arg)
 	case model.Items:
-		ItemSlice = append(ItemSlice, arg.(*model.Item))
+		ItemSlice.ISlice = append(ItemSlice.ISlice, arg.(*model.Item))
 		addItemToFile(arg)
 	default:
 		fmt.Println("Неизвестный тип ")
 	}
-	fmt.Println("ShoppingList: ", ShoppingListSlice)
-	fmt.Println("Item: ", ItemSlice)
-	mu.Unlock()
+	fmt.Println("ShoppingList: ", ShoppingListSlice.SLSlice)
+	fmt.Println("Item: ", ItemSlice.ISlice)
 }
 
 func LoggingSlice() {
-	mu.Lock()
-	if len(ShoppingListSlice) != lenSLSlice {
-		for i := lenSLSlice; i < len(ShoppingListSlice); i++ {
-			log.Println(ShoppingListSlice[i])
+	if len(ShoppingListSlice.SLSlice) != lenSLSlice {
+		for i := lenSLSlice; i < len(ShoppingListSlice.SLSlice); i++ {
+			log.Println(ShoppingListSlice.SLSlice[i])
 		}
-		lenSLSlice = len(ShoppingListSlice)
+		lenSLSlice = len(ShoppingListSlice.SLSlice)
 	}
-	if len(ItemSlice) != lenISlice {
-		for i := lenISlice; i < len(ItemSlice); i++ {
-			log.Println(ItemSlice[i])
+	if len(ItemSlice.ISlice) != lenISlice {
+		for i := lenISlice; i < len(ItemSlice.ISlice); i++ {
+			log.Println(ItemSlice.ISlice[i])
 		}
-		lenISlice = len(ItemSlice)
+		lenISlice = len(ItemSlice.ISlice)
 	}
-	mu.Unlock()
 }
 
 func FillSlices() {
@@ -60,7 +70,7 @@ func FillSlices() {
 	}
 
 	if len(lists) != 0 {
-		if err := json.Unmarshal(lists, &ShoppingListSlice); err != nil {
+		if err := json.Unmarshal(lists, &ShoppingListSlice.SLSlice); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -72,7 +82,7 @@ func FillSlices() {
 	}
 
 	if len(items) != 0 {
-		if err := json.Unmarshal(items, &ItemSlice); err != nil {
+		if err := json.Unmarshal(items, &ItemSlice.ISlice); err != nil {
 			log.Fatal(err)
 		}
 	}
