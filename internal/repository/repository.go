@@ -10,83 +10,202 @@ import (
 	"sync"
 )
 
-var mu = sync.Mutex{}
-
-type SLSlice struct {
-	mu      sync.Mutex
-	SLSlice []*model.ShoppingList
-}
-type ISlice struct {
-	mu     sync.Mutex
-	ISlice []*model.Item
+type ItemStore struct {
+	mu                  sync.Mutex
+	store               []*model.Item
+	printedElementCount int
+	filePath            string
 }
 
-var ShoppingListSlice = SLSlice{
-	SLSlice: make([]*model.ShoppingList, 0),
+type ShoppingListStore struct {
+	mu                  sync.Mutex
+	store               []*model.ShoppingList
+	printedElementCount int
+	filePath            string
 }
-var ItemSlice = ISlice{
-	ISlice: make([]*model.Item, 0),
+
+var ShoppingList = ShoppingListStore{
+	sync.Mutex{},
+	make([]*model.ShoppingList, 0),
+	0,
+	"./shoppingLists.json",
 }
-var lenSLSlice = len(ShoppingListSlice.SLSlice)
-var lenISlice = len(ItemSlice.ISlice)
+
+var ItemList = ItemStore{
+	sync.Mutex{},
+	make([]*model.Item, 0),
+	0,
+	"./items.json",
+}
+
+func (i *ItemStore) LoadFromFile() {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	items, err := readJson(i.filePath)
+	if err == io.EOF {
+		return
+	} else if err != nil {
+		log.Fatal(err)
+	}
+	if len(items) != 0 {
+		if err := json.Unmarshal(items, &i.store); err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
+func (i *ItemStore) SaveToFile(item *model.Item) {
+	hu := i.filePath
+	f, err := os.OpenFile(hu, os.O_RDWR, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+
+		}
+	}(f)
+	// Перемещаемся в конец файла
+	stat, err := f.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Если это начала файла, начинаем массив json
+	if stat.Size() == 0 {
+		_, err := f.WriteString("[")
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		// Если файл не пуст, то заменчем последнюю закрывающую скобку массива на запятую
+		if _, err := f.Seek(-1, io.SeekEnd); err != nil {
+			log.Fatal(err)
+		}
+		if _, err := f.WriteString(","); err != nil {
+			log.Fatal(err)
+		}
+	}
+	// Добавляем объект в файл и закрываем массив
+	e := json.NewEncoder(f)
+	if err := e.Encode(item); err != nil {
+		log.Fatal(err)
+	}
+	// Добавляем закрывающую скобку
+	_, err = f.WriteString("]")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (i *ItemStore) Add(item *model.Item) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	i.store = append(i.store, item)
+	i.SaveToFile(item)
+
+}
+
+func (i *ItemStore) PrintNewElement() {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	if len(i.store) > i.printedElementCount {
+		for j := i.printedElementCount; j < len(i.store); j++ {
+			log.Println(i.store[j])
+		}
+		i.printedElementCount = len(i.store)
+	}
+}
+
+func (s *ShoppingListStore) LoadFromFile() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	items, err := readJson(s.filePath)
+	if err == io.EOF {
+		return
+	} else if err != nil {
+		log.Fatal(err)
+	}
+	if len(items) != 0 {
+		if err := json.Unmarshal(items, &s.store); err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
+func (s *ShoppingListStore) SaveToFile(sl *model.ShoppingList) {
+	f, err := os.OpenFile(s.filePath, os.O_RDWR, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+
+		}
+	}(f)
+	// Перемещаемся в конец файла
+	stat, err := f.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Если это начала файла, начинаем массив json
+	if stat.Size() == 0 {
+		_, err := f.WriteString("[")
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		// Если файл не пуст, то заменчем последнюю закрывающую скобку массива на запятую
+		if _, err := f.Seek(-1, io.SeekEnd); err != nil {
+			log.Fatal(err)
+		}
+		if _, err := f.WriteString(","); err != nil {
+			log.Fatal(err)
+		}
+	}
+	// Добавляем объект в файл и закрываем массив
+	e := json.NewEncoder(f)
+	if err := e.Encode(sl); err != nil {
+		log.Fatal(err)
+	}
+	// Добавляем закрывающую скобку
+	_, err = f.WriteString("]")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (s *ShoppingListStore) Add(sl *model.ShoppingList) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.store = append(s.store, sl)
+	s.SaveToFile(sl)
+
+}
+
+func (s *ShoppingListStore) PrintNewElement() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if len(s.store) > s.printedElementCount {
+		for i := s.printedElementCount; i < len(s.store); i++ {
+			log.Println(s.store[i])
+		}
+		s.printedElementCount = len(s.store)
+	}
+}
 
 func CheckInterface(arg interface{}) {
 	switch arg.(type) {
 	case model.ShoppingLists:
-		ShoppingListSlice.SLSlice = append(ShoppingListSlice.SLSlice, arg.(*model.ShoppingList))
-		addItemToFile(arg)
+		ShoppingList.Add(arg.(*model.ShoppingList))
+		ShoppingList.PrintNewElement()
 	case model.Items:
-		ItemSlice.ISlice = append(ItemSlice.ISlice, arg.(*model.Item))
-		addItemToFile(arg)
+		ItemList.Add(arg.(*model.Item))
+		ItemList.PrintNewElement()
 	default:
 		fmt.Println("Неизвестный тип ")
 	}
-	fmt.Println("ShoppingList: ", ShoppingListSlice.SLSlice)
-	fmt.Println("Item: ", ItemSlice.ISlice)
-}
-
-func LoggingSlice() {
-	if len(ShoppingListSlice.SLSlice) != lenSLSlice {
-		for i := lenSLSlice; i < len(ShoppingListSlice.SLSlice); i++ {
-			log.Println(ShoppingListSlice.SLSlice[i])
-		}
-		lenSLSlice = len(ShoppingListSlice.SLSlice)
-	}
-	if len(ItemSlice.ISlice) != lenISlice {
-		for i := lenISlice; i < len(ItemSlice.ISlice); i++ {
-			log.Println(ItemSlice.ISlice[i])
-		}
-		lenISlice = len(ItemSlice.ISlice)
-	}
-}
-
-func FillSlices() {
-	mu.Lock()
-	lists, err := readJson("./shoppingLists.json")
-	if err == io.EOF {
-		return
-	} else if err != nil {
-		log.Fatal(err)
-	}
-
-	if len(lists) != 0 {
-		if err := json.Unmarshal(lists, &ShoppingListSlice.SLSlice); err != nil {
-			log.Fatal(err)
-		}
-	}
-	items, err := readJson("./items.json")
-	if err == io.EOF {
-		return
-	} else if err != nil {
-		log.Fatal(err)
-	}
-
-	if len(items) != 0 {
-		if err := json.Unmarshal(items, &ItemSlice.ISlice); err != nil {
-			log.Fatal(err)
-		}
-	}
-	mu.Unlock()
 }
 
 func readJson(fileName string) ([]byte, error) {
@@ -97,96 +216,7 @@ func readJson(fileName string) ([]byte, error) {
 	return data, nil
 }
 
-func addItemToFile(arg interface{}) {
-	switch arg.(type) {
-	case model.ShoppingLists:
-		log.Println("addSLToFile start")
-		f, err := os.OpenFile("./shoppingLists.json", os.O_RDWR, 0644)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer func(f *os.File) {
-			err := f.Close()
-			if err != nil {
-
-			}
-		}(f)
-		// Перемещаемся в конец файла
-		stat, err := f.Stat()
-		if err != nil {
-			log.Fatal(err)
-		}
-		// Если это начала файла, начинаем массив json
-		if stat.Size() == 0 {
-			_, err := f.WriteString("[")
-			if err != nil {
-				log.Fatal(err)
-			}
-		} else {
-			// Если файл не пуст, то заменчем последнюю закрывающую скобку массива на запятую
-			if _, err := f.Seek(-1, io.SeekEnd); err != nil {
-				log.Fatal(err)
-			}
-			if _, err := f.WriteString(","); err != nil {
-				log.Fatal(err)
-			}
-		}
-		// Добавляем объект в файл и закрываем массив
-		e := json.NewEncoder(f)
-		if err := e.Encode(arg.(*model.ShoppingList)); err != nil {
-			log.Fatal(err)
-		}
-		// Добавляем закрывающую скобку
-		_, err = f.WriteString("]")
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Println("addSLToFile end")
-
-	case model.Items:
-		log.Println("addItemToFile start")
-		f, err := os.OpenFile("./items.json", os.O_RDWR, 0644)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer func(f *os.File) {
-			err := f.Close()
-			if err != nil {
-
-			}
-		}(f)
-		// Перемещаемся в конец файла
-		stat, err := f.Stat()
-		if err != nil {
-			log.Fatal(err)
-		}
-		// Если это начала файла, начинаем массив json
-		if stat.Size() == 0 {
-			_, err := f.WriteString("[")
-			if err != nil {
-				log.Fatal(err)
-			}
-		} else {
-			// Если файл не пуст, то заменчем последнюю закрывающую скобку массива на запятую
-			if _, err := f.Seek(-1, io.SeekEnd); err != nil {
-				log.Fatal(err)
-			}
-			if _, err := f.WriteString(","); err != nil {
-				log.Fatal(err)
-			}
-		}
-		// Добавляем объект в файл и закрываем массив
-		e := json.NewEncoder(f)
-		if err := e.Encode(arg.(*model.Item)); err != nil {
-			log.Fatal(err)
-		}
-		// Добавляем закрывающую скобку
-		_, err = f.WriteString("]")
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Println("addItemToFile end")
-	default:
-		log.Fatal("Неизвестный тип.")
-	}
+func FillSlices() {
+	ItemList.LoadFromFile()
+	ShoppingList.LoadFromFile()
 }

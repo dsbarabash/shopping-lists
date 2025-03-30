@@ -73,7 +73,6 @@ func asyncLogger(ctx context.Context, d time.Duration) {
 			fmt.Println("Shutdown")
 			return
 		case <-ticker.C:
-			repository.LoggingSlice()
 		}
 	}
 }
