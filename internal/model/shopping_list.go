@@ -13,13 +13,13 @@ type ShoppingLists interface {
 }
 
 type ShoppingList struct {
-	id        string
-	title     string
-	userId    string
-	createdAt time.Time
-	updatedAt time.Time
-	items     []string
-	state     State
+	Id        string    `json:"id"`
+	Title     string    `json:"title"`
+	UserId    string    `json:"userId"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	Items     []string  `json:"items"`
+	State     State     `json:"state"`
 }
 
 func NewShoppingList(title string, userId string) (*ShoppingList, error) {
@@ -30,26 +30,26 @@ func NewShoppingList(title string, userId string) (*ShoppingList, error) {
 	}
 	id := uuid.New()
 	return &ShoppingList{
-		id:        id.String(),
-		title:     title,
-		userId:    userId,
-		createdAt: time.Now(),
-		updatedAt: time.Now(),
-		items:     make([]string, 0),
-		state:     1,
+		Id:        id.String(),
+		Title:     title,
+		UserId:    userId,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Items:     make([]string, 0),
+		State:     1,
 	}, nil
 }
 
 func (s *ShoppingList) UpdateShoppingList(title string, items []string) {
-	s.title = title
-	s.updatedAt = time.Now()
+	s.Title = title
+	s.UpdatedAt = time.Now()
 	for _, i := range items {
-		s.items = append(s.items, i)
+		s.Items = append(s.Items, i)
 	}
 }
 
 func (s ShoppingList) String() string {
-	return fmt.Sprintf("id: \"%s\", title: \"%s\", userId: \"%s\", createdAt: \"%s\", updatedAt: \"%s\"", s.id, s.title, s.userId, s.createdAt.Format(time.DateTime), s.updatedAt.Format(time.DateTime))
+	return fmt.Sprintf("id: \"%s\", title: \"%s\", userId: \"%s\", createdAt: \"%s\", updatedAt: \"%s\"", s.Id, s.Title, s.UserId, s.CreatedAt.Format(time.DateTime), s.UpdatedAt.Format(time.DateTime))
 }
 
 type Items interface {
@@ -58,14 +58,14 @@ type Items interface {
 }
 
 type Item struct {
-	id             string
-	title          string
-	comment        string
-	isDone         bool
-	userId         string
-	createdAt      time.Time
-	updatedAt      time.Time
-	ShoppingListId string
+	Id             string    `json:"id"`
+	Title          string    `json:"title"`
+	Comment        string    `json:"comment"`
+	IsDone         bool      `json:"isDone"`
+	UserId         string    `json:"userId"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+	ShoppingListId string    `json:"shoppingListId"`
 }
 
 func NewItem(title string, comment string, userId string, shoppingListId string) (*Item, error) {
@@ -78,24 +78,24 @@ func NewItem(title string, comment string, userId string, shoppingListId string)
 	}
 	id := uuid.New()
 	return &Item{
-		id:             id.String(),
-		title:          title,
-		comment:        comment,
-		isDone:         false,
-		userId:         userId,
-		createdAt:      time.Now(),
-		updatedAt:      time.Now(),
+		Id:             id.String(),
+		Title:          title,
+		Comment:        comment,
+		IsDone:         false,
+		UserId:         userId,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 		ShoppingListId: shoppingListId,
 	}, nil
 }
 
 func (i *Item) UpdateItem(title string, comment string, isDone bool) {
-	i.title = title
-	i.comment = comment
-	i.isDone = isDone
-	i.updatedAt = time.Now()
+	i.Title = title
+	i.Comment = comment
+	i.IsDone = isDone
+	i.UpdatedAt = time.Now()
 }
 
 func (i Item) String() string {
-	return fmt.Sprintf("id: \"%s\", title: \"%s\", comment: \"%s\", isDone: \"%v\", userId: \"%s\", createdAt: \"%s\", updatedAt: \"%s\", ShoppingListId: \"%s\"", i.id, i.title, i.comment, i.isDone, i.userId, i.createdAt.Format(time.DateTime), i.updatedAt.Format(time.DateTime), i.ShoppingListId)
+	return fmt.Sprintf("id: \"%s\", title: \"%s\", comment: \"%s\", isDone: \"%v\", userId: \"%s\", createdAt: \"%s\", updatedAt: \"%s\", ShoppingListId: \"%s\"", i.Id, i.Title, i.Comment, i.IsDone, i.UserId, i.CreatedAt.Format(time.DateTime), i.UpdatedAt.Format(time.DateTime), i.ShoppingListId)
 }

@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+	repository.FillSlices()
 	ch := make(chan interface{})
 
 	defer close(ch)
@@ -72,7 +73,6 @@ func asyncLogger(ctx context.Context, d time.Duration) {
 			fmt.Println("Shutdown")
 			return
 		case <-ticker.C:
-			repository.LoggingSlice()
 		}
 	}
 }
