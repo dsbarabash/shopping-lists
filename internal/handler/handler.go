@@ -228,7 +228,7 @@ func UpdateItemById(ctx context.Context, w http.ResponseWriter, r *http.Request)
 	err = repository.UpdateItem(id, body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": "Shopping list with this Id not found"}`))
+		w.Write([]byte(`{"success": false, "error": "Item with this Id not found"}`))
 		return
 	}
 	w.WriteHeader(http.StatusOK)
