@@ -15,7 +15,7 @@ type ShoppingLists interface {
 type ShoppingList struct {
 	Id        string    `json:"id"`
 	Title     string    `json:"title"`
-	UserId    string    `json:"userId"`
+	UserId    string    `json:"user_id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Items     []string  `json:"items"`

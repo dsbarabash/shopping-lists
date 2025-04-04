@@ -66,7 +66,7 @@ func Login(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 
 func Add(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
-	if strings.Contains(string(body), "ShoppingListId") {
+	if strings.Contains(string(body), "shopping_list_id") {
 		var it model.Item
 		err = json.Unmarshal(body, &it)
 		if err != nil {
