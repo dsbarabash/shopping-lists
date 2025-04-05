@@ -39,7 +39,10 @@ func (a *App) Start() error {
 		handler.Login(a.ctx, w, r)
 	})
 	mux.HandleFunc("POST /api/item/", func(w http.ResponseWriter, r *http.Request) {
-		handler.Add(a.ctx, w, r)
+		handler.AddItem(a.ctx, w, r)
+	})
+	mux.HandleFunc("POST /api/shopping_list/", func(w http.ResponseWriter, r *http.Request) {
+		handler.AddShoppingList(a.ctx, w, r)
 	})
 	mux.HandleFunc("GET /api/items", func(w http.ResponseWriter, r *http.Request) {
 		handler.GetItems(a.ctx, w, r)

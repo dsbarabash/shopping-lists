@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -64,76 +63,83 @@ func Login(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func Add(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func AddItem(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
-	if strings.Contains(string(body), "shopping_list_id") {
-		var it model.Item
-		err = json.Unmarshal(body, &it)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-		}
-		if it.Title == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(`{"success": false, "error": "Title is empty"}`))
-			return
-		}
-		if it.UserId == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(`{"success": false, "error": "UserId is empty"}`))
-			return
-		}
-		if it.ShoppingListId == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(`{"success": false, "error": "ShoppingListId is empty"}`))
-			return
-		}
-		slID, err := uuid.NewUUID()
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
-			return
-		}
-		it.Id = slID.String()
-		it.CreatedAt = time.Now()
-		it.UpdatedAt = time.Now()
-		it.IsDone = false
-		repository.CheckInterface(&it)
-
-	} else {
-		var sl model.ShoppingList
-		err = json.Unmarshal(body, &sl)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-		}
-		if sl.Title == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(`{"success": false, "error": "Title is empty"}`))
-			return
-		}
-		if sl.UserId == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(`{"success": false, "error": "UserId is empty"}`))
-			return
-		}
-		slID, err := uuid.NewUUID()
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
-			return
-		}
-		sl.Id = slID.String()
-		sl.CreatedAt = time.Now()
-		sl.UpdatedAt = time.Now()
-		sl.Items = make([]string, 0)
-		sl.State = 1
-		repository.CheckInterface(&sl)
-	}
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
+	var it model.Item
+	err = json.Unmarshal(body, &it)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	if it.Title == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": "Title is empty"}`))
+		return
+	}
+	if it.UserId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": "UserId is empty"}`))
+		return
+	}
+	if it.ShoppingListId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": "ShoppingListId is empty"}`))
+		return
+	}
+	slID, err := uuid.NewUUID()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+		return
+	}
+	it.Id = slID.String()
+	it.CreatedAt = time.Now()
+	it.UpdatedAt = time.Now()
+	it.IsDone = false
+	repository.CheckInterface(&it)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status": "ok"}`))
+	return
+}
 
+func AddShoppingList(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+		return
+	}
+	var sl model.ShoppingList
+	err = json.Unmarshal(body, &sl)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	if sl.Title == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": "Title is empty"}`))
+		return
+	}
+	if sl.UserId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": "UserId is empty"}`))
+		return
+	}
+	slID, err := uuid.NewUUID()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+		return
+	}
+	sl.Id = slID.String()
+	sl.CreatedAt = time.Now()
+	sl.UpdatedAt = time.Now()
+	sl.Items = make([]string, 0)
+	sl.State = 1
+	repository.CheckInterface(&sl)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status": "ok"}`))
 	return
