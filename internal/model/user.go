@@ -5,16 +5,16 @@ import (
 )
 
 type User struct {
-	id    string
-	name  string
-	state State
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	State State  `json:"state"`
 }
 
 func NewUser(name string) *User {
 	id := uuid.New()
 	return &User{
-		id:    id.String(),
-		name:  name,
-		state: 1,
+		Id:    id.String(),
+		Name:  name,
+		State: 1,
 	}
 }

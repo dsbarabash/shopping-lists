@@ -15,9 +15,9 @@ type ShoppingLists interface {
 type ShoppingList struct {
 	Id        string    `json:"id"`
 	Title     string    `json:"title"`
-	UserId    string    `json:"userId"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	UserId    string    `json:"user_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 	Items     []string  `json:"items"`
 	State     State     `json:"state"`
 }
@@ -61,11 +61,11 @@ type Item struct {
 	Id             string    `json:"id"`
 	Title          string    `json:"title"`
 	Comment        string    `json:"comment"`
-	IsDone         bool      `json:"isDone"`
-	UserId         string    `json:"userId"`
-	CreatedAt      time.Time `json:"createdAt"`
-	UpdatedAt      time.Time `json:"updatedAt"`
-	ShoppingListId string    `json:"shoppingListId"`
+	IsDone         bool      `json:"is_done"`
+	UserId         string    `json:"user_id"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updatedA_at"`
+	ShoppingListId string    `json:"shopping_list_id"`
 }
 
 func NewItem(title string, comment string, userId string, shoppingListId string) (*Item, error) {
