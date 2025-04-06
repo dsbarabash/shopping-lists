@@ -3,41 +3,57 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/dsbarabash/shopping-lists/internal/app"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/dsbarabash/shopping-lists/internal/service"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
+	"log"
 	"time"
 )
 
 func main() {
 	repository.FillSlices()
-	ch := make(chan interface{})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	defer close(ch)
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-	defer stop()
+	newApp, err := app.NewService(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	wg := new(sync.WaitGroup)
-	wg.Add(3)
-
-	go func() {
-		generator(ctx, ch, time.Millisecond*100)
-		wg.Done()
-	}()
-	go func() {
-		asyncStore(ctx, ch)
-		wg.Done()
-	}()
-	go func() {
-		asyncLogger(ctx, time.Millisecond*200)
-		wg.Done()
-	}()
-	wg.Wait()
-
+	err = newApp.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
+
+//func main() {
+//
+//
+//	repository.FillSlices()
+//	ch := make(chan interface{})
+//
+//	defer close(ch)
+//	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+//	defer stop()
+//
+//	wg := new(sync.WaitGroup)
+//	wg.Add(3)
+//
+//	go func() {
+//		generator(ctx, ch, time.Millisecond*100)
+//		wg.Done()
+//	}()
+//	go func() {
+//		asyncStore(ctx, ch)
+//		wg.Done()
+//	}()
+//	go func() {
+//		asyncLogger(ctx, time.Millisecond*200)
+//		wg.Done()
+//	}()
+//	wg.Wait()
+//
+//}
 
 func generator(ctx context.Context, ch chan any, d time.Duration) {
 	ticker := time.NewTicker(d)
