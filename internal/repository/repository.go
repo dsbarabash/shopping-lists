@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/model"
+	"github.com/dsbarabash/shopping-lists/internal/service"
 	"io"
 	"log"
 	"os"
@@ -42,7 +43,7 @@ var ItemList = ItemStore{
 func (i *ItemStore) LoadFromFile() {
 	i.mu.Lock()
 	defer i.mu.Unlock()
-	items, err := readJson(i.filePath)
+	items, err := ReadJson(i.filePath)
 	if err == io.EOF {
 		return
 	} else if err != nil {
@@ -139,7 +140,7 @@ func (i *ItemStore) PrintNewElement() {
 func (s *ShoppingListStore) LoadFromFile() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	items, err := readJson(s.filePath)
+	items, err := ReadJson(s.filePath)
 	if err == io.EOF {
 		return
 	} else if err != nil {
@@ -244,7 +245,7 @@ func CheckInterface(arg interface{}) {
 	}
 }
 
-func readJson(fileName string) ([]byte, error) {
+func ReadJson(fileName string) ([]byte, error) {
 	data, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, err
@@ -255,6 +256,7 @@ func readJson(fileName string) ([]byte, error) {
 func FillSlices() {
 	ItemList.LoadFromFile()
 	ShoppingList.LoadFromFile()
+	service.UserList.LoadFromFile()
 }
 
 func GetItems() string {

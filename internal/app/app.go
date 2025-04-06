@@ -32,10 +32,10 @@ func (a *App) Start() error {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		handler.Base(a.ctx, w, r)
+	mux.HandleFunc("POST /registration/", func(w http.ResponseWriter, r *http.Request) {
+		handler.Registration(a.ctx, w, r)
 	})
-	mux.HandleFunc("POST /login", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("POST /login/", func(w http.ResponseWriter, r *http.Request) {
 		handler.Login(a.ctx, w, r)
 	})
 	mux.HandleFunc("POST /api/item/", func(w http.ResponseWriter, r *http.Request) {
@@ -48,25 +48,25 @@ func (a *App) Start() error {
 		handler.GetItems(a.ctx, w, r)
 	})
 	mux.HandleFunc("GET /api/shopping_lists", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetSls(a.ctx, w, r)
+		handler.GetShoppingLists(a.ctx, w, r)
 	})
 	mux.HandleFunc("GET /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
 		handler.GetItemById(a.ctx, w, r)
 	})
 	mux.HandleFunc("GET /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetSlById(a.ctx, w, r)
+		handler.GetShoppingListById(a.ctx, w, r)
 	})
 	mux.HandleFunc("DELETE /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
 		handler.DeleteItemById(a.ctx, w, r)
 	})
 	mux.HandleFunc("DELETE /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.DeleteSlById(a.ctx, w, r)
+		handler.DeleteShoppingListById(a.ctx, w, r)
 	})
 	mux.HandleFunc("PUT /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
 		handler.UpdateItemById(a.ctx, w, r)
 	})
 	mux.HandleFunc("PUT /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.UpdateSlById(a.ctx, w, r)
+		handler.UpdateShoppingListById(a.ctx, w, r)
 	})
 
 	serverHTTP := &http.Server{
