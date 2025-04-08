@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/model"
@@ -23,7 +22,7 @@ import (
 // @Success 200 {string}  string "Login successful"
 // @Failure 400 {string} string "Invalid request"
 // @Router /registration [post]
-func Login(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -69,7 +68,7 @@ func Login(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Registration successful"
 // @Failure 400 {string} string "Invalid request"
 // @Router /login [post]
-func Registration(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func Registration(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -110,7 +109,7 @@ func Registration(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Item added"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/item/ [post]
-func AddItem(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func AddItem(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -162,7 +161,7 @@ func AddItem(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Shopping list added"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/shopping_list/ [post]
-func AddShoppingList(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func AddShoppingList(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -209,7 +208,7 @@ func AddShoppingList(ctx context.Context, w http.ResponseWriter, r *http.Request
 // @Success 200 {string}  string "Items"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/items [get]
-func GetItems(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func GetItems(w http.ResponseWriter, r *http.Request) {
 	list := repository.GetItems()
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true, "items": ` + list + `}`))
@@ -223,7 +222,7 @@ func GetItems(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Shopping lists"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/shopping_lists [get]
-func GetShoppingLists(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 	list := repository.GetSls()
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true, "shopping_list": ` + list + `}`))
@@ -237,7 +236,7 @@ func GetShoppingLists(ctx context.Context, w http.ResponseWriter, r *http.Reques
 // @Success 200 {string}  string "Item"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/item/{id} [get]
-func GetItemById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func GetItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	item, err := repository.GetItemById(id)
 	if err != nil {
@@ -257,7 +256,7 @@ func GetItemById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Shopping list"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/shopping_list/{id} [get]
-func GetShoppingListById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func GetShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	sl, err := repository.GetSlById(id)
 	if err != nil {
@@ -277,7 +276,7 @@ func GetShoppingListById(ctx context.Context, w http.ResponseWriter, r *http.Req
 // @Success 200 {string}  string "Item deleted"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/item/{id} [delete]
-func DeleteItemById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func DeleteItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	err := repository.DeleteItemById(id)
 	if err != nil {
@@ -297,7 +296,7 @@ func DeleteItemById(ctx context.Context, w http.ResponseWriter, r *http.Request)
 // @Success 200 {string}  string "Shopping list deleted"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/shopping_list/{id} [delete]
-func DeleteShoppingListById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func DeleteShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	err := repository.DeleteSlById(id)
 	if err != nil {
@@ -318,7 +317,7 @@ func DeleteShoppingListById(ctx context.Context, w http.ResponseWriter, r *http.
 // @Success 200 {string}  string "Shopping list updated"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/shopping_list/{id} [put]
-func UpdateShoppingListById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func UpdateShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -345,7 +344,7 @@ func UpdateShoppingListById(ctx context.Context, w http.ResponseWriter, r *http.
 // @Success 200 {string}  string "Item updated"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/item/{id} [put]
-func UpdateItemById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func UpdateItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
