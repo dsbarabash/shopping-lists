@@ -99,3 +99,31 @@ func (i *Item) UpdateItem(title string, comment string, isDone bool) {
 func (i Item) String() string {
 	return fmt.Sprintf("id: \"%s\", title: \"%s\", comment: \"%s\", isDone: \"%v\", userId: \"%s\", createdAt: \"%s\", updatedAt: \"%s\", ShoppingListId: \"%s\"", i.Id, i.Title, i.Comment, i.IsDone, i.UserId, i.CreatedAt.Format(time.DateTime), i.UpdatedAt.Format(time.DateTime), i.ShoppingListId)
 }
+
+type CreateItemRequest struct {
+	Title          string `json:"title"`
+	Comment        string `json:"comment"`
+	UserId         string `json:"user_id"`
+	ShoppingListId string `json:"shopping_list_id"`
+}
+
+type CreateShoppingListRequest struct {
+	Title  string   `json:"title"`
+	UserId string   `json:"user_id"`
+	Items  []string `json:"items"`
+}
+
+type UpdateShoppingListRequest struct {
+	Title  string   `json:"title"`
+	UserId string   `json:"user_id"`
+	Items  []string `json:"items"`
+	State  State    `json:"state"`
+}
+
+type UpdateItemRequest struct {
+	Title          string `json:"title"`
+	Comment        string `json:"comment"`
+	IsDone         bool   `json:"is_done"`
+	UserId         string `json:"user_id"`
+	ShoppingListId string `json:"shopping_list_id"`
+}

@@ -1,14 +1,11 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/dsbarabash/shopping-lists/internal/config"
 	"github.com/dsbarabash/shopping-lists/internal/model"
-	_ "github.com/dsbarabash/shopping-lists/internal/model"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/dsbarabash/shopping-lists/internal/service"
 	_ "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"io"
@@ -16,13 +13,16 @@ import (
 	"time"
 )
 
-func Base(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "ok", "data": "Main page"}`))
-	return
-}
-
-func Login(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+// Login
+// @Summary Логин
+// @Tags auths
+// @Accept			json
+// @Produce		json
+// @Param input body model.CreateUserRequest true "Модель которую принимает метод"
+// @Success 200 {string}  string "Login successful"
+// @Failure 400 {string} string "Invalid request"
+// @Router /registration [post]
+func Login(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -41,29 +41,75 @@ func Login(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": "Username is empty"}`))
 		return
 	}
+	if user.Password == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": "Password is empty"}`))
+		return
+	}
 
-	userID, err := uuid.NewUUID()
+	token, err := service.Login(&user)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	user.State = 1
-
-	secretKey := []byte(config.Cfg.Secret)
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":    userID.String(),
-		"name":  user.Name,
-		"state": 1,
-	})
-	tokenString, err := token.SignedString(secretKey)
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`{"success": true, "token": "%s"}`, tokenString)))
+	w.Write([]byte(fmt.Sprintf(`{"success": true, "token": "%s"}`, token)))
 	return
 }
 
-func AddItem(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+// Registration
+// @Summary Регистрация
+// @Tags auths
+// @Accept			json
+// @Produce		json
+// @Param input body model.RegistrationUserRequest true "Модель которую принимает метод"
+// @Success 200 {string}  string "Registration successful"
+// @Failure 400 {string} string "Invalid request"
+// @Router /login [post]
+func Registration(w http.ResponseWriter, r *http.Request) {
+	var user model.User
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+		return
+	}
+	err = json.Unmarshal(body, &user)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+		return
+	}
+	if user.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": "Username is empty"}`))
+		return
+	}
+	if user.Password == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": "Password is empty"}`))
+		return
+	}
+
+	service.Registration(user.Name, user.Password)
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`{"success": true}`)))
+	return
+}
+
+// AddItem
+// @Summary Добавить пункт в список покупок
+// @Tags item
+// @Accept			json
+// @Produce		json
+// @Param input body model.CreateItemRequest true "Модель которую принимает метод"
+// @Success 200 {string}  string "Item added"
+// @Failure 400 {string} string "Invalid request"
+// @Router /api/item/ [post]
+func AddItem(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -106,7 +152,16 @@ func AddItem(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func AddShoppingList(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+// AddShoppingList
+// @Summary Создать список покупок
+// @Tags shopping_list
+// @Accept			json
+// @Produce		json
+// @Param input body model.CreateShoppingListRequest true "Модель которую принимает метод"
+// @Success 200 {string}  string "Shopping list added"
+// @Failure 400 {string} string "Invalid request"
+// @Router /api/shopping_list/ [post]
+func AddShoppingList(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -145,19 +200,43 @@ func AddShoppingList(ctx context.Context, w http.ResponseWriter, r *http.Request
 	return
 }
 
-func GetItems(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+// GetItems
+// @Summary Получить все пункты списков покупок
+// @Tags item
+// @Accept			json
+// @Produce		json
+// @Success 200 {string}  string "Items"
+// @Failure 400 {string} string "Invalid request"
+// @Router /api/items [get]
+func GetItems(w http.ResponseWriter, r *http.Request) {
 	list := repository.GetItems()
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true, "items": ` + list + `}`))
 }
 
-func GetSls(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+// GetShoppingLists
+// @Summary Получить все списки покупок
+// @Tags shopping_list
+// @Accept			json
+// @Produce		json
+// @Success 200 {string}  string "Shopping lists"
+// @Failure 400 {string} string "Invalid request"
+// @Router /api/shopping_lists [get]
+func GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 	list := repository.GetSls()
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true, "shopping_list": ` + list + `}`))
 }
 
-func GetItemById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+// GetItemById
+// @Summary Получить пункт списка покупок по его id
+// @Tags item
+// @Accept			json
+// @Produce		json
+// @Success 200 {string}  string "Item"
+// @Failure 400 {string} string "Invalid request"
+// @Router /api/item/{id} [get]
+func GetItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	item, err := repository.GetItemById(id)
 	if err != nil {
@@ -169,7 +248,15 @@ func GetItemById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"success": true, "item": ` + item + `}`))
 }
 
-func GetSlById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+// GetShoppingListById
+// @Summary Получить список покупок по его id
+// @Tags shopping_list
+// @Accept			json
+// @Produce		json
+// @Success 200 {string}  string "Shopping list"
+// @Failure 400 {string} string "Invalid request"
+// @Router /api/shopping_list/{id} [get]
+func GetShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	sl, err := repository.GetSlById(id)
 	if err != nil {
@@ -181,7 +268,15 @@ func GetSlById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"success": true, "shopping_list": ` + sl + `}`))
 }
 
-func DeleteItemById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+// DeleteItemById
+// @Summary Удалить пункт списка покупок по его id
+// @Tags item
+// @Accept			json
+// @Produce		json
+// @Success 200 {string}  string "Item deleted"
+// @Failure 400 {string} string "Invalid request"
+// @Router /api/item/{id} [delete]
+func DeleteItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	err := repository.DeleteItemById(id)
 	if err != nil {
@@ -193,7 +288,15 @@ func DeleteItemById(ctx context.Context, w http.ResponseWriter, r *http.Request)
 	w.Write([]byte(`{"success": true}`))
 }
 
-func DeleteSlById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+// DeleteShoppingListById
+// @Summary Удалить список покупок по его id
+// @Tags shopping_list
+// @Accept			json
+// @Produce		json
+// @Success 200 {string}  string "Shopping list deleted"
+// @Failure 400 {string} string "Invalid request"
+// @Router /api/shopping_list/{id} [delete]
+func DeleteShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	err := repository.DeleteSlById(id)
 	if err != nil {
@@ -205,7 +308,16 @@ func DeleteSlById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"success": true}`))
 }
 
-func UpdateSlById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+// UpdateShoppingListById
+// @Summary Обновить список покупок по его id
+// @Tags shopping_list
+// @Accept			json
+// @Produce		json
+// @Param input body model.UpdateShoppingListRequest true "Модель которую принимает метод"
+// @Success 200 {string}  string "Shopping list updated"
+// @Failure 400 {string} string "Invalid request"
+// @Router /api/shopping_list/{id} [put]
+func UpdateShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -223,7 +335,16 @@ func UpdateSlById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"success": true}`))
 }
 
-func UpdateItemById(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+// UpdateItemById
+// @Summary Обновить пункт списка покупок по его id
+// @Tags item
+// @Accept			json
+// @Produce		json
+// @Param input body model.UpdateItemRequest true "Модель которую принимает метод"
+// @Success 200 {string}  string "Item updated"
+// @Failure 400 {string} string "Invalid request"
+// @Router /api/item/{id} [put]
+func UpdateItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

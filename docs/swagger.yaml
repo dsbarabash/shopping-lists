@@ -1,0 +1,321 @@
+definitions:
+  model.CreateItemRequest:
+    properties:
+      comment:
+        type: string
+      shopping_list_id:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: string
+    type: object
+  model.CreateShoppingListRequest:
+    properties:
+      items:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      user_id:
+        type: string
+    type: object
+  model.CreateUserRequest:
+    properties:
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  model.RegistrationUserRequest:
+    properties:
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  model.UpdateItemRequest:
+    properties:
+      comment:
+        type: string
+      is_done:
+        type: boolean
+      shopping_list_id:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: string
+    type: object
+  model.UpdateShoppingListRequest:
+    properties:
+      items:
+        items:
+          type: string
+        type: array
+      state:
+        type: integer
+      title:
+        type: string
+      user_id:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/item/:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Модель которую принимает метод
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Item added
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Добавить пункт в список покупок
+      tags:
+      - item
+  /api/item/{id}:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Item deleted
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Удалить пункт списка покупок по его id
+      tags:
+      - item
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Item
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Получить пункт списка покупок по его id
+      tags:
+      - item
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Модель которую принимает метод
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Item updated
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Обновить пункт списка покупок по его id
+      tags:
+      - item
+  /api/items:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Items
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Получить все пункты списков покупок
+      tags:
+      - item
+  /api/shopping_list/:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Модель которую принимает метод
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateShoppingListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Shopping list added
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Создать список покупок
+      tags:
+      - shopping_list
+  /api/shopping_list/{id}:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Shopping list deleted
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Удалить список покупок по его id
+      tags:
+      - shopping_list
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Shopping list
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Получить список покупок по его id
+      tags:
+      - shopping_list
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Модель которую принимает метод
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateShoppingListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Shopping list updated
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Обновить список покупок по его id
+      tags:
+      - shopping_list
+  /api/shopping_lists:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Shopping lists
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Получить все списки покупок
+      tags:
+      - shopping_list
+  /login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Модель которую принимает метод
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.RegistrationUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Registration successful
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Регистрация
+      tags:
+      - auths
+  /registration:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Модель которую принимает метод
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+      summary: Логин
+      tags:
+      - auths
+swagger: "2.0"

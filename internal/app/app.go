@@ -31,42 +31,41 @@ func (a *App) Start() error {
 	defer stop()
 
 	mux := http.NewServeMux()
-
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		handler.Base(a.ctx, w, r)
+	mux.HandleFunc("POST /registration/", func(w http.ResponseWriter, r *http.Request) {
+		handler.UserIdentity(w, r, handler.Registration)
 	})
-	mux.HandleFunc("POST /login", func(w http.ResponseWriter, r *http.Request) {
-		handler.Login(a.ctx, w, r)
+	mux.HandleFunc("POST /login/", func(w http.ResponseWriter, r *http.Request) {
+		handler.UserIdentity(w, r, handler.Login)
 	})
 	mux.HandleFunc("POST /api/item/", func(w http.ResponseWriter, r *http.Request) {
-		handler.AddItem(a.ctx, w, r)
+		handler.UserIdentity(w, r, handler.AddItem)
 	})
 	mux.HandleFunc("POST /api/shopping_list/", func(w http.ResponseWriter, r *http.Request) {
-		handler.AddShoppingList(a.ctx, w, r)
+		handler.UserIdentity(w, r, handler.AddShoppingList)
 	})
 	mux.HandleFunc("GET /api/items", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetItems(a.ctx, w, r)
+		handler.UserIdentity(w, r, handler.GetItems)
 	})
 	mux.HandleFunc("GET /api/shopping_lists", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetSls(a.ctx, w, r)
+		handler.UserIdentity(w, r, handler.GetShoppingLists)
 	})
 	mux.HandleFunc("GET /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetItemById(a.ctx, w, r)
+		handler.UserIdentity(w, r, handler.GetItemById)
 	})
 	mux.HandleFunc("GET /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetSlById(a.ctx, w, r)
+		handler.UserIdentity(w, r, handler.GetShoppingListById)
 	})
 	mux.HandleFunc("DELETE /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.DeleteItemById(a.ctx, w, r)
+		handler.UserIdentity(w, r, handler.DeleteItemById)
 	})
 	mux.HandleFunc("DELETE /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.DeleteSlById(a.ctx, w, r)
+		handler.UserIdentity(w, r, handler.DeleteShoppingListById)
 	})
 	mux.HandleFunc("PUT /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.UpdateItemById(a.ctx, w, r)
+		handler.UserIdentity(w, r, handler.UpdateItemById)
 	})
 	mux.HandleFunc("PUT /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.UpdateSlById(a.ctx, w, r)
+		handler.UserIdentity(w, r, handler.UpdateShoppingListById)
 	})
 
 	serverHTTP := &http.Server{
