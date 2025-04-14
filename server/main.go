@@ -11,6 +11,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"io"
 	"log"
@@ -491,7 +493,11 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 	FillSlices()
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(
+			loggingInterceptor,
+		),
+	)
 	shopping_list_api.RegisterShoppingListServiceServer(s, &server{})
 
 	reflection.Register(s)
@@ -500,4 +506,43 @@ func main() {
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
+}
+
+func loggingInterceptor(
+	ctx context.Context,
+	req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (resp interface{}, err error) {
+	start := time.Now()
+	resp, err = handler(ctx, req)
+	st, _ := status.FromError(err)
+
+	var reqJSON, respJSON string
+
+	if m, ok := req.(proto.Message); ok {
+		b, _ := protojson.Marshal(m)
+		reqJSON = string(b)
+	} else {
+		reqJSON = "<non-proto request>"
+	}
+
+	if m, ok := resp.(proto.Message); ok && resp != nil {
+		b, _ := protojson.Marshal(m)
+		respJSON = string(b)
+	} else {
+		respJSON = "<non-proto response or nil>"
+	}
+
+	log.Printf(
+		"[gRPC] method=%s status=%s error=%v duration=%s request=%s response=%s",
+		info.FullMethod,
+		st.Code(),
+		err,
+		time.Since(start),
+		reqJSON,
+		respJSON,
+	)
+
+	return resp, err
 }
