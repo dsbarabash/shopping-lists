@@ -123,7 +123,6 @@ func (i *ItemStore) Add(item *model.Item) {
 	defer i.mu.Unlock()
 	i.store = append(i.store, item)
 	i.SaveToFile(item)
-
 }
 
 func (i *ItemStore) PrintNewElement() {
