@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package shopping_list.v1;
+
+option go_package = "pkg/grpc/v1/shopping_list_api";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+message ShoppingList {
+  string id = 1;
+  string Title = 2;
+  string UserId = 5;
+  google.protobuf.Timestamp CreatedAt = 6;
+  google.protobuf.Timestamp UpdatedAt = 7;
+  repeated string Items = 8;
+  State state = 9;
+}
+
+message Item {
+  string id = 1;
+  string Title = 2;
+  string Comment = 3;
+  bool IsDone = 4;
+  string UserId = 5;
+  google.protobuf.Timestamp CreatedAt = 6;
+  google.protobuf.Timestamp UpdatedAt = 7;
+  string ShoppingListId = 8;
+}
+
+enum State {
+  STATE__DONT_USE = 0;
+  STATE_ARCHIVED = 1;
+  STATE_ACTIVE = 2;
+}
+
+service ShoppingListService {
+  rpc GetItem (GetItemRequest) returns (GetItemResponse);
+  rpc GetItems (google.protobuf.Empty) returns (GetItemsResponse);
+  rpc CreateItem (CreateItemRequest) returns (CreateItemResponse);
+  rpc UpdateItem (UpdateItemRequest) returns (UpdateItemResponse);
+  rpc DeleteItem (DeleteItemRequest) returns (DeleteItemResponse);
+
+  rpc GetShoppingList (GetShoppingListRequest) returns (GetShoppingListResponse);
+  rpc GetShoppingLists (google.protobuf.Empty) returns (GetShoppingListsResponse);
+  rpc CreateShoppingList (CreateShoppingListRequest) returns (CreateShoppingListResponse);
+  rpc UpdateShoppingList (UpdateShoppingListRequest) returns (UpdateShoppingListResponse);
+  rpc DeleteShoppingList (DeleteShoppingListRequest) returns (DeleteShoppingListResponse);
+}
+
+message CreateShoppingListRequest {
+  string id = 1;
+  string Title = 2;
+  string UserId = 4;
+  repeated string items = 5;
+}
+
+message CreateShoppingListResponse {
+  ShoppingList shoppingList = 1;
+}
+
+message UpdateShoppingListRequest {
+  string id = 1;
+  string Title = 2;
+  string Comment = 3;
+  string UserId = 4;
+  repeated string items = 5;
+}
+
+message UpdateShoppingListResponse {
+  ShoppingList shoppingList = 1;
+}
+
+message DeleteShoppingListRequest {
+  string id = 1;
+}
+
+message DeleteShoppingListResponse {
+}
+
+message GetShoppingListRequest {
+  string id = 1;
+}
+
+message GetShoppingListResponse {
+  ShoppingList shoppingList = 1;
+}
+
+message GetShoppingListsResponse {
+  repeated ShoppingList shoppingList = 1;
+}
+
+message CreateItemRequest {
+  string id = 1;
+  string Title = 2;
+  string Comment = 3;
+  string UserId = 4;
+  string ShoppingListId = 5;
+}
+
+message CreateItemResponse {
+  Item item = 1;
+}
+
+message UpdateItemRequest {
+  string id = 1;
+  string Title = 2;
+  string Comment = 3;
+  string UserId = 4;
+  string ShoppingListId = 5;
+}
+
+message UpdateItemResponse {
+  Item item = 1;
+}
+
+message DeleteItemRequest {
+  string id = 1;
+}
+
+message DeleteItemResponse {
+}
+
+message GetItemsResponse {
+  repeated Item items = 1;
+}
+
+message GetItemRequest {
+  string id = 1;
+}
+
+message GetItemResponse {
+  Item item = 1;
+}
