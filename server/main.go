@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/dsbarabash/shopping-lists/internal/handler"
 	"github.com/dsbarabash/shopping-lists/internal/proto_api/pkg/grpc/v1/shopping_list_api"
+	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
@@ -14,7 +15,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
-	handler.FillSlices()
+	repository.FillSlices()
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(
 			handler.LoggingInterceptor,

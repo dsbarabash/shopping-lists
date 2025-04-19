@@ -2,10 +2,9 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/dsbarabash/shopping-lists/internal/model"
 	"github.com/dsbarabash/shopping-lists/internal/proto_api/pkg/grpc/v1/shopping_list_api"
-	"github.com/dsbarabash/shopping-lists/internal/service"
+	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -13,222 +12,9 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"io"
 	"log"
-	"os"
-	"sync"
 	"time"
 )
-
-type ItemStore struct {
-	mu                  sync.Mutex
-	store               []*model.Item
-	printedElementCount int
-	filePath            string
-}
-
-type ShoppingListStore struct {
-	mu                  sync.Mutex
-	store               []*model.ShoppingList
-	printedElementCount int
-	filePath            string
-}
-
-var ShoppingList = ShoppingListStore{
-	sync.Mutex{},
-	make([]*model.ShoppingList, 0),
-	0,
-	"./shoppingLists.json",
-}
-
-var ItemList = ItemStore{
-	sync.Mutex{},
-	make([]*model.Item, 0),
-	0,
-	"./items.json",
-}
-
-func ReadJson(fileName string) ([]byte, error) {
-	data, err := os.ReadFile(fileName)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
-}
-func (s *ShoppingListStore) LoadFromFile() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	items, err := ReadJson(s.filePath)
-	if err == io.EOF {
-		return
-	} else if err != nil {
-		log.Fatal(err)
-	}
-	if len(items) != 0 {
-		if err := json.Unmarshal(items, &s.store); err != nil {
-			log.Fatal(err)
-		}
-	}
-}
-
-func (s *ShoppingListStore) SaveToFile(sl *model.ShoppingList) {
-	f, err := os.OpenFile(s.filePath, os.O_RDWR, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-
-		}
-	}(f)
-	// Перемещаемся в конец файла
-	stat, err := f.Stat()
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Если это начала файла, начинаем массив json
-	if stat.Size() == 0 {
-		_, err := f.WriteString("[")
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		// Если файл не пуст, то заменчем последнюю закрывающую скобку массива на запятую
-		if _, err := f.Seek(-1, io.SeekEnd); err != nil {
-			log.Fatal(err)
-		}
-		if _, err := f.WriteString(","); err != nil {
-			log.Fatal(err)
-		}
-	}
-	// Добавляем объект в файл и закрываем массив
-	e := json.NewEncoder(f)
-	if err := e.Encode(sl); err != nil {
-		log.Fatal(err)
-	}
-	// Добавляем закрывающую скобку
-	_, err = f.WriteString("]")
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func (s *ShoppingListStore) SaveSliceToFile(sls []*model.ShoppingList) {
-	f, err := os.OpenFile(s.filePath, os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}(f)
-
-	e := json.NewEncoder(f)
-	if err := e.Encode(sls); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func (s *ShoppingListStore) Add(sl *model.ShoppingList) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.store = append(s.store, sl)
-	s.SaveToFile(sl)
-}
-
-func (i *ItemStore) LoadFromFile() {
-	i.mu.Lock()
-	defer i.mu.Unlock()
-	items, err := ReadJson(i.filePath)
-	if err == io.EOF {
-		return
-	} else if err != nil {
-		log.Fatal(err)
-	}
-	if len(items) != 0 {
-		if err := json.Unmarshal(items, &i.store); err != nil {
-			log.Fatal(err)
-		}
-	}
-}
-
-func (i *ItemStore) SaveToFile(item *model.Item) {
-	hu := i.filePath
-	f, err := os.OpenFile(hu, os.O_RDWR, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-
-		}
-	}(f)
-	// Перемещаемся в конец файла
-	stat, err := f.Stat()
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Если это начала файла, начинаем массив json
-	if stat.Size() == 0 {
-		_, err := f.WriteString("[")
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		// Если файл не пуст, то заменчем последнюю закрывающую скобку массива на запятую
-		if _, err := f.Seek(-1, io.SeekEnd); err != nil {
-			log.Fatal(err)
-		}
-		if _, err := f.WriteString(","); err != nil {
-			log.Fatal(err)
-		}
-	}
-	// Добавляем объект в файл и закрываем массив
-	e := json.NewEncoder(f)
-	if err := e.Encode(item); err != nil {
-		log.Fatal(err)
-	}
-	// Добавляем закрывающую скобку
-	_, err = f.WriteString("]")
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func (i *ItemStore) SaveSliceToFile(sls []*model.Item) {
-	f, err := os.OpenFile(i.filePath, os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}(f)
-
-	e := json.NewEncoder(f)
-	if err := e.Encode(sls); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func (i *ItemStore) Add(item *model.Item) {
-	i.mu.Lock()
-	defer i.mu.Unlock()
-	i.store = append(i.store, item)
-	i.SaveToFile(item)
-}
-
-func FillSlices() {
-	ItemList.LoadFromFile()
-	ShoppingList.LoadFromFile()
-	service.UserList.LoadFromFile()
-}
 
 type Server struct {
 	shopping_list_api.ShoppingListServiceServer
@@ -254,7 +40,7 @@ func (s *Server) CreateShoppingList(
 		UserId: req.UserId,
 		Items:  req.Items,
 	}
-	ShoppingList.Add(sl)
+	repository.ShoppingList.Add(sl)
 	return &shopping_list_api.CreateShoppingListResponse{
 		ShoppingList: &shopping_list_api.ShoppingList{
 			Id:     iID.String(),
@@ -275,14 +61,14 @@ func (s *Server) UpdateShoppingList(
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	for _, i := range ShoppingList.store {
+	for _, i := range repository.ShoppingList.Store {
 		if i.Id == req.GetId() {
 			i.Title = req.Title
 			i.UserId = req.UserId
 			i.UpdatedAt = time.Now()
 			i.Items = req.Items
 
-			ItemList.SaveSliceToFile(ItemList.store)
+			repository.ItemList.SaveSliceToFile(repository.ItemList.Store)
 
 			return &shopping_list_api.UpdateShoppingListResponse{
 				ShoppingList: &shopping_list_api.ShoppingList{
@@ -305,11 +91,11 @@ func (s *Server) DeleteShoppingList(
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
 
-	for idx, sl := range ShoppingList.store {
+	for idx, sl := range repository.ShoppingList.Store {
 		if sl.Id == req.GetId() {
-			copy(ShoppingList.store[idx:], ShoppingList.store[idx+1:])
-			ShoppingList.store = ShoppingList.store[:len(ShoppingList.store)-1]
-			ShoppingList.SaveSliceToFile(ShoppingList.store)
+			copy(repository.ShoppingList.Store[idx:], repository.ShoppingList.Store[idx+1:])
+			repository.ShoppingList.Store = repository.ShoppingList.Store[:len(repository.ShoppingList.Store)-1]
+			repository.ShoppingList.SaveSliceToFile(repository.ShoppingList.Store)
 			return nil, nil
 		}
 	}
@@ -322,7 +108,7 @@ func (s *Server) GetShoppingList(
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	for _, i := range ShoppingList.store {
+	for _, i := range repository.ShoppingList.Store {
 		if i.Id == req.GetId() {
 			return &shopping_list_api.GetShoppingListResponse{
 				ShoppingList: &shopping_list_api.ShoppingList{
@@ -339,7 +125,7 @@ func (s *Server) GetShoppingList(
 
 func (s *Server) GetShoppingLists(ctx context.Context, _ *emptypb.Empty) (*shopping_list_api.GetShoppingListsResponse, error) {
 	var sl []*shopping_list_api.ShoppingList
-	for _, i := range ShoppingList.store {
+	for _, i := range repository.ShoppingList.Store {
 		sl = append(sl, &shopping_list_api.ShoppingList{
 			Id:     i.Id,
 			Title:  i.Title,
@@ -377,7 +163,7 @@ func (s *Server) CreateItem(
 		UserId:         req.UserId,
 		ShoppingListId: req.ShoppingListId,
 	}
-	ItemList.Add(item)
+	repository.ItemList.Add(item)
 	return &shopping_list_api.CreateItemResponse{
 		Item: &shopping_list_api.Item{
 			Id:      iID.String(),
@@ -400,7 +186,7 @@ func (s *Server) UpdateItem(
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	for _, i := range ItemList.store {
+	for _, i := range repository.ItemList.Store {
 		if i.Id == req.GetId() {
 			i.Title = req.Title
 			i.Comment = req.Comment
@@ -408,7 +194,7 @@ func (s *Server) UpdateItem(
 			i.UserId = req.UserId
 			i.UpdatedAt = time.Now()
 			i.ShoppingListId = req.ShoppingListId
-			ItemList.SaveSliceToFile(ItemList.store)
+			repository.ItemList.SaveSliceToFile(repository.ItemList.Store)
 
 			return &shopping_list_api.UpdateItemResponse{
 				Item: &shopping_list_api.Item{
@@ -433,11 +219,11 @@ func (s *Server) DeleteItem(
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
 
-	for idx, i := range ItemList.store {
+	for idx, i := range repository.ItemList.Store {
 		if i.Id == req.GetId() {
-			copy(ItemList.store[idx:], ItemList.store[idx+1:])
-			ItemList.store = ItemList.store[:len(ItemList.store)-1]
-			ItemList.SaveSliceToFile(ItemList.store)
+			copy(repository.ItemList.Store[idx:], repository.ItemList.Store[idx+1:])
+			repository.ItemList.Store = repository.ItemList.Store[:len(repository.ItemList.Store)-1]
+			repository.ItemList.SaveSliceToFile(repository.ItemList.Store)
 			return nil, nil
 		}
 	}
@@ -451,7 +237,7 @@ func (s *Server) GetItem(
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
 
-	for _, i := range ItemList.store {
+	for _, i := range repository.ItemList.Store {
 		if i.Id == req.GetId() {
 			return &shopping_list_api.GetItemResponse{
 				Item: &shopping_list_api.Item{
@@ -470,7 +256,7 @@ func (s *Server) GetItem(
 
 func (s *Server) GetItems(ctx context.Context, _ *emptypb.Empty) (*shopping_list_api.GetItemsResponse, error) {
 	var items []*shopping_list_api.Item
-	for _, i := range ItemList.store {
+	for _, i := range repository.ItemList.Store {
 		items = append(items, &shopping_list_api.Item{
 			Id:             i.Id,
 			Title:          i.Title,
