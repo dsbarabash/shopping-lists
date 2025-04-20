@@ -13,17 +13,17 @@ import (
 )
 
 type ItemStore struct {
-	mu                  sync.Mutex
-	store               []*model.Item
-	printedElementCount int
-	filePath            string
+	Mu                  sync.Mutex
+	Store               []*model.Item
+	PrintedElementCount int
+	FilePath            string
 }
 
 type ShoppingListStore struct {
-	mu                  sync.Mutex
-	store               []*model.ShoppingList
-	printedElementCount int
-	filePath            string
+	Mu                  sync.Mutex
+	Store               []*model.ShoppingList
+	PrintedElementCount int
+	FilePath            string
 }
 
 var ShoppingList = ShoppingListStore{
@@ -41,23 +41,23 @@ var ItemList = ItemStore{
 }
 
 func (i *ItemStore) LoadFromFile() {
-	i.mu.Lock()
-	defer i.mu.Unlock()
-	items, err := ReadJson(i.filePath)
+	i.Mu.Lock()
+	defer i.Mu.Unlock()
+	items, err := ReadJson(i.FilePath)
 	if err == io.EOF {
 		return
 	} else if err != nil {
 		log.Fatal(err)
 	}
 	if len(items) != 0 {
-		if err := json.Unmarshal(items, &i.store); err != nil {
+		if err := json.Unmarshal(items, &i.Store); err != nil {
 			log.Fatal(err)
 		}
 	}
 }
 
 func (i *ItemStore) SaveToFile(item *model.Item) {
-	hu := i.filePath
+	hu := i.FilePath
 	f, err := os.OpenFile(hu, os.O_RDWR, 0644)
 	if err != nil {
 		log.Fatal(err)
@@ -101,7 +101,7 @@ func (i *ItemStore) SaveToFile(item *model.Item) {
 }
 
 func (i *ItemStore) SaveSliceToFile(sls []*model.Item) {
-	f, err := os.OpenFile(i.filePath, os.O_TRUNC|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(i.FilePath, os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -119,42 +119,41 @@ func (i *ItemStore) SaveSliceToFile(sls []*model.Item) {
 }
 
 func (i *ItemStore) Add(item *model.Item) {
-	i.mu.Lock()
-	defer i.mu.Unlock()
-	i.store = append(i.store, item)
+	i.Mu.Lock()
+	defer i.Mu.Unlock()
+	i.Store = append(i.Store, item)
 	i.SaveToFile(item)
-
 }
 
 func (i *ItemStore) PrintNewElement() {
-	i.mu.Lock()
-	defer i.mu.Unlock()
-	if len(i.store) > i.printedElementCount {
-		for j := i.printedElementCount; j < len(i.store); j++ {
-			log.Println(i.store[j])
+	i.Mu.Lock()
+	defer i.Mu.Unlock()
+	if len(i.Store) > i.PrintedElementCount {
+		for j := i.PrintedElementCount; j < len(i.Store); j++ {
+			log.Println(i.Store[j])
 		}
-		i.printedElementCount = len(i.store)
+		i.PrintedElementCount = len(i.Store)
 	}
 }
 
 func (s *ShoppingListStore) LoadFromFile() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	items, err := ReadJson(s.filePath)
+	s.Mu.Lock()
+	defer s.Mu.Unlock()
+	items, err := ReadJson(s.FilePath)
 	if err == io.EOF {
 		return
 	} else if err != nil {
 		log.Fatal(err)
 	}
 	if len(items) != 0 {
-		if err := json.Unmarshal(items, &s.store); err != nil {
+		if err := json.Unmarshal(items, &s.Store); err != nil {
 			log.Fatal(err)
 		}
 	}
 }
 
 func (s *ShoppingListStore) SaveToFile(sl *model.ShoppingList) {
-	f, err := os.OpenFile(s.filePath, os.O_RDWR, 0644)
+	f, err := os.OpenFile(s.FilePath, os.O_RDWR, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -197,7 +196,7 @@ func (s *ShoppingListStore) SaveToFile(sl *model.ShoppingList) {
 }
 
 func (s *ShoppingListStore) SaveSliceToFile(sls []*model.ShoppingList) {
-	f, err := os.OpenFile(s.filePath, os.O_TRUNC|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(s.FilePath, os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -215,20 +214,20 @@ func (s *ShoppingListStore) SaveSliceToFile(sls []*model.ShoppingList) {
 }
 
 func (s *ShoppingListStore) Add(sl *model.ShoppingList) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.store = append(s.store, sl)
+	s.Mu.Lock()
+	defer s.Mu.Unlock()
+	s.Store = append(s.Store, sl)
 	s.SaveToFile(sl)
 }
 
 func (s *ShoppingListStore) PrintNewElement() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if len(s.store) > s.printedElementCount {
-		for i := s.printedElementCount; i < len(s.store); i++ {
-			log.Println(s.store[i])
+	s.Mu.Lock()
+	defer s.Mu.Unlock()
+	if len(s.Store) > s.PrintedElementCount {
+		for i := s.PrintedElementCount; i < len(s.Store); i++ {
+			log.Println(s.Store[i])
 		}
-		s.printedElementCount = len(s.store)
+		s.PrintedElementCount = len(s.Store)
 	}
 }
 
@@ -260,19 +259,19 @@ func FillSlices() {
 }
 
 func GetItems() string {
-	ItemList.mu.Lock()
-	defer ItemList.mu.Unlock()
+	ItemList.Mu.Lock()
+	defer ItemList.Mu.Unlock()
 	iString := ""
-	for _, i := range ItemList.store {
+	for _, i := range ItemList.Store {
 		iString = iString + i.String()
 	}
 	return iString
 }
 
 func GetItemById(id string) (string, error) {
-	ItemList.mu.Lock()
-	defer ItemList.mu.Unlock()
-	for _, i := range ItemList.store {
+	ItemList.Mu.Lock()
+	defer ItemList.Mu.Unlock()
+	for _, i := range ItemList.Store {
 		if i.Id == id {
 			return i.String(), nil
 		}
@@ -281,13 +280,13 @@ func GetItemById(id string) (string, error) {
 }
 
 func DeleteItemById(id string) error {
-	ItemList.mu.Lock()
-	defer ItemList.mu.Unlock()
-	for idx, i := range ItemList.store {
+	ItemList.Mu.Lock()
+	defer ItemList.Mu.Unlock()
+	for idx, i := range ItemList.Store {
 		if i.Id == id {
-			copy(ItemList.store[idx:], ItemList.store[idx+1:])
-			ItemList.store = ItemList.store[:len(ItemList.store)-1]
-			ItemList.SaveSliceToFile(ItemList.store)
+			copy(ItemList.Store[idx:], ItemList.Store[idx+1:])
+			ItemList.Store = ItemList.Store[:len(ItemList.Store)-1]
+			ItemList.SaveSliceToFile(ItemList.Store)
 			return nil
 		}
 	}
@@ -295,19 +294,19 @@ func DeleteItemById(id string) error {
 }
 
 func GetSls() string {
-	ShoppingList.mu.Lock()
-	defer ShoppingList.mu.Unlock()
+	ShoppingList.Mu.Lock()
+	defer ShoppingList.Mu.Unlock()
 	slString := ""
-	for _, l := range ShoppingList.store {
+	for _, l := range ShoppingList.Store {
 		slString = slString + l.String()
 	}
 	return slString
 }
 
 func GetSlById(id string) (string, error) {
-	ShoppingList.mu.Lock()
-	defer ShoppingList.mu.Unlock()
-	for _, sl := range ShoppingList.store {
+	ShoppingList.Mu.Lock()
+	defer ShoppingList.Mu.Unlock()
+	for _, sl := range ShoppingList.Store {
 		if sl.Id == id {
 			return sl.String(), nil
 		}
@@ -316,13 +315,13 @@ func GetSlById(id string) (string, error) {
 }
 
 func DeleteSlById(id string) error {
-	ShoppingList.mu.Lock()
-	defer ShoppingList.mu.Unlock()
-	for idx, sl := range ShoppingList.store {
+	ShoppingList.Mu.Lock()
+	defer ShoppingList.Mu.Unlock()
+	for idx, sl := range ShoppingList.Store {
 		if sl.Id == id {
-			copy(ShoppingList.store[idx:], ShoppingList.store[idx+1:])
-			ShoppingList.store = ShoppingList.store[:len(ShoppingList.store)-1]
-			ShoppingList.SaveSliceToFile(ShoppingList.store)
+			copy(ShoppingList.Store[idx:], ShoppingList.Store[idx+1:])
+			ShoppingList.Store = ShoppingList.Store[:len(ShoppingList.Store)-1]
+			ShoppingList.SaveSliceToFile(ShoppingList.Store)
 			return nil
 		}
 	}
@@ -330,15 +329,15 @@ func DeleteSlById(id string) error {
 }
 
 func UpdateSl(id string, body []byte) error {
-	ShoppingList.mu.Lock()
-	defer ShoppingList.mu.Unlock()
-	for _, sl := range ShoppingList.store {
+	ShoppingList.Mu.Lock()
+	defer ShoppingList.Mu.Unlock()
+	for _, sl := range ShoppingList.Store {
 		if sl.Id == id {
 			err := json.Unmarshal(body, &sl)
 			if err != nil {
 				return err
 			}
-			ShoppingList.SaveSliceToFile(ShoppingList.store)
+			ShoppingList.SaveSliceToFile(ShoppingList.Store)
 			return nil
 		}
 	}
@@ -346,15 +345,15 @@ func UpdateSl(id string, body []byte) error {
 }
 
 func UpdateItem(id string, body []byte) error {
-	ItemList.mu.Lock()
-	defer ItemList.mu.Unlock()
-	for _, item := range ItemList.store {
+	ItemList.Mu.Lock()
+	defer ItemList.Mu.Unlock()
+	for _, item := range ItemList.Store {
 		if item.Id == id {
 			err := json.Unmarshal(body, &item)
 			if err != nil {
 				return err
 			}
-			ItemList.SaveSliceToFile(ItemList.store)
+			ItemList.SaveSliceToFile(ItemList.Store)
 			return nil
 		}
 	}
