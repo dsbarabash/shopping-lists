@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/model"
-	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/dsbarabash/shopping-lists/internal/service"
 	_ "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -146,7 +145,7 @@ func AddItem(w http.ResponseWriter, r *http.Request) {
 	it.CreatedAt = time.Now()
 	it.UpdatedAt = time.Now()
 	it.IsDone = false
-	repository.CheckInterface(&it)
+	service.CheckInterface(&it)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status": "ok"}`))
 	return
@@ -194,7 +193,7 @@ func AddShoppingList(w http.ResponseWriter, r *http.Request) {
 	sl.UpdatedAt = time.Now()
 	sl.Items = make([]string, 0)
 	sl.State = 1
-	repository.CheckInterface(&sl)
+	service.CheckInterface(&sl)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status": "ok"}`))
 	return
@@ -209,7 +208,7 @@ func AddShoppingList(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/items [get]
 func GetItems(w http.ResponseWriter, r *http.Request) {
-	list := repository.GetItems()
+	list := service.GetItems()
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true, "items": ` + list + `}`))
 }
@@ -223,7 +222,7 @@ func GetItems(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/shopping_lists [get]
 func GetShoppingLists(w http.ResponseWriter, r *http.Request) {
-	list := repository.GetSls()
+	list := service.GetSls()
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true, "shopping_list": ` + list + `}`))
 }
@@ -238,7 +237,7 @@ func GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 // @Router /api/item/{id} [get]
 func GetItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	item, err := repository.GetItemById(id)
+	item, err := service.GetItemById(id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": "Item with this Id not found"}`))
@@ -258,7 +257,7 @@ func GetItemById(w http.ResponseWriter, r *http.Request) {
 // @Router /api/shopping_list/{id} [get]
 func GetShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	sl, err := repository.GetSlById(id)
+	sl, err := service.GetSlById(id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": "Shopping list with this Id not found"}`))
@@ -278,7 +277,7 @@ func GetShoppingListById(w http.ResponseWriter, r *http.Request) {
 // @Router /api/item/{id} [delete]
 func DeleteItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	err := repository.DeleteItemById(id)
+	err := service.DeleteItemById(id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": "Item with this Id not found"}`))
@@ -298,7 +297,7 @@ func DeleteItemById(w http.ResponseWriter, r *http.Request) {
 // @Router /api/shopping_list/{id} [delete]
 func DeleteShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	err := repository.DeleteSlById(id)
+	err := service.DeleteSlById(id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": "Shopping list with this Id not found"}`))
@@ -325,7 +324,7 @@ func UpdateShoppingListById(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	err = repository.UpdateSl(id, body)
+	err = service.UpdateSl(id, body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": "Shopping list with this Id not found"}`))
@@ -352,7 +351,7 @@ func UpdateItemById(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	err = repository.UpdateItem(id, body)
+	err = service.UpdateItem(id, body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": "Item with this Id not found"}`))

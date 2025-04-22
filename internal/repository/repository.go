@@ -2,10 +2,7 @@ package repository
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/model"
-	"github.com/dsbarabash/shopping-lists/internal/service"
 	"io"
 	"log"
 	"os"
@@ -231,19 +228,6 @@ func (s *ShoppingListStore) PrintNewElement() {
 	}
 }
 
-func CheckInterface(arg interface{}) {
-	switch arg.(type) {
-	case model.ShoppingLists:
-		ShoppingList.Add(arg.(*model.ShoppingList))
-		ShoppingList.PrintNewElement()
-	case model.Items:
-		ItemList.Add(arg.(*model.Item))
-		ItemList.PrintNewElement()
-	default:
-		fmt.Println("Неизвестный тип ")
-	}
-}
-
 func ReadJson(fileName string) ([]byte, error) {
 	data, err := os.ReadFile(fileName)
 	if err != nil {
@@ -255,107 +239,5 @@ func ReadJson(fileName string) ([]byte, error) {
 func FillSlices() {
 	ItemList.LoadFromFile()
 	ShoppingList.LoadFromFile()
-	service.UserList.LoadFromFile()
-}
-
-func GetItems() string {
-	ItemList.Mu.Lock()
-	defer ItemList.Mu.Unlock()
-	iString := ""
-	for _, i := range ItemList.Store {
-		iString = iString + i.String()
-	}
-	return iString
-}
-
-func GetItemById(id string) (string, error) {
-	ItemList.Mu.Lock()
-	defer ItemList.Mu.Unlock()
-	for _, i := range ItemList.Store {
-		if i.Id == id {
-			return i.String(), nil
-		}
-	}
-	return "", errors.New("NOT FOUND")
-}
-
-func DeleteItemById(id string) error {
-	ItemList.Mu.Lock()
-	defer ItemList.Mu.Unlock()
-	for idx, i := range ItemList.Store {
-		if i.Id == id {
-			copy(ItemList.Store[idx:], ItemList.Store[idx+1:])
-			ItemList.Store = ItemList.Store[:len(ItemList.Store)-1]
-			ItemList.SaveSliceToFile(ItemList.Store)
-			return nil
-		}
-	}
-	return errors.New("NOT FOUND")
-}
-
-func GetSls() string {
-	ShoppingList.Mu.Lock()
-	defer ShoppingList.Mu.Unlock()
-	slString := ""
-	for _, l := range ShoppingList.Store {
-		slString = slString + l.String()
-	}
-	return slString
-}
-
-func GetSlById(id string) (string, error) {
-	ShoppingList.Mu.Lock()
-	defer ShoppingList.Mu.Unlock()
-	for _, sl := range ShoppingList.Store {
-		if sl.Id == id {
-			return sl.String(), nil
-		}
-	}
-	return "", errors.New("NOT FOUND")
-}
-
-func DeleteSlById(id string) error {
-	ShoppingList.Mu.Lock()
-	defer ShoppingList.Mu.Unlock()
-	for idx, sl := range ShoppingList.Store {
-		if sl.Id == id {
-			copy(ShoppingList.Store[idx:], ShoppingList.Store[idx+1:])
-			ShoppingList.Store = ShoppingList.Store[:len(ShoppingList.Store)-1]
-			ShoppingList.SaveSliceToFile(ShoppingList.Store)
-			return nil
-		}
-	}
-	return errors.New("NOT FOUND")
-}
-
-func UpdateSl(id string, body []byte) error {
-	ShoppingList.Mu.Lock()
-	defer ShoppingList.Mu.Unlock()
-	for _, sl := range ShoppingList.Store {
-		if sl.Id == id {
-			err := json.Unmarshal(body, &sl)
-			if err != nil {
-				return err
-			}
-			ShoppingList.SaveSliceToFile(ShoppingList.Store)
-			return nil
-		}
-	}
-	return errors.New("NOT FOUND")
-}
-
-func UpdateItem(id string, body []byte) error {
-	ItemList.Mu.Lock()
-	defer ItemList.Mu.Unlock()
-	for _, item := range ItemList.Store {
-		if item.Id == id {
-			err := json.Unmarshal(body, &item)
-			if err != nil {
-				return err
-			}
-			ItemList.SaveSliceToFile(ItemList.Store)
-			return nil
-		}
-	}
-	return errors.New("NOT FOUND")
+	UserList.LoadFromFile()
 }
