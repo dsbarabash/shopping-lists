@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/model"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
-	"github.com/dsbarabash/shopping-lists/internal/service"
 	_ "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"io"
@@ -26,7 +25,7 @@ type Controller struct {
 // @Success 200 {string}  string "Login successful"
 // @Failure 400 {string} string "Invalid request"
 // @Router /registration [post]
-func Login(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -51,7 +50,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := service.Login(&user)
+	token, err := c.MongoDb.Login(r.Context(), &user)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
@@ -72,7 +71,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Registration successful"
 // @Failure 400 {string} string "Invalid request"
 // @Router /login [post]
-func Registration(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Registration(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -96,8 +95,7 @@ func Registration(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": "Password is empty"}`))
 		return
 	}
-
-	service.Registration(user.Name, user.Password)
+	c.MongoDb.Registration(r.Context(), user.Name, user.Password)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`{"success": true}`)))
@@ -380,7 +378,7 @@ func (c *Controller) UpdateShoppingListById(w http.ResponseWriter, r *http.Reque
 	_, err = c.MongoDb.UpdateSl(r.Context(), id, body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": "Shopping list with this Id not found"}`))
+		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -407,15 +405,7 @@ func (c *Controller) UpdateItemById(w http.ResponseWriter, r *http.Request) {
 	_, err = c.MongoDb.UpdateItem(r.Context(), id, body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": "Item with this Id not found"}`))
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"success": true}`))
-	_, err = c.MongoDb.UpdateItem(r.Context(), id, body)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": "Item with this Id not found"}`))
+		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
 	w.WriteHeader(http.StatusOK)
