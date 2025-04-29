@@ -1,13 +1,27 @@
 package repository
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
+	"github.com/dsbarabash/shopping-lists/internal/config"
 	"github.com/dsbarabash/shopping-lists/internal/model"
+	"github.com/golang-jwt/jwt/v5"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"io"
 	"log"
 	"os"
 	"sync"
+	"time"
 )
+
+type MongoDb struct {
+	ShoppingListCollection *mongo.Collection
+	ItemCollection         *mongo.Collection
+	UserCollection         *mongo.Collection
+}
 
 type ItemStore struct {
 	Mu                  sync.Mutex
@@ -115,11 +129,18 @@ func (i *ItemStore) SaveSliceToFile(sls []*model.Item) {
 	}
 }
 
-func (i *ItemStore) Add(item *model.Item) {
-	i.Mu.Lock()
-	defer i.Mu.Unlock()
-	i.Store = append(i.Store, item)
-	i.SaveToFile(item)
+func (m *MongoDb) AddItem(ctx context.Context, item *model.Item) {
+	_, err := m.ItemCollection.InsertOne(ctx, item)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (m *MongoDb) AddShoppingList(ctx context.Context, sl *model.ShoppingList) {
+	_, err := m.ItemCollection.InsertOne(ctx, sl)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (i *ItemStore) PrintNewElement() {
@@ -237,7 +258,245 @@ func ReadJson(fileName string) ([]byte, error) {
 }
 
 func FillSlices() {
-	ItemList.LoadFromFile()
-	ShoppingList.LoadFromFile()
+	//ItemList.LoadFromFile()
+	//ShoppingList.LoadFromFile()
 	UserList.LoadFromFile()
+}
+
+func ConnectMongoDb() *MongoDb {
+	ctx := context.Background()
+	// Подключение к MongoDB
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	client, err := mongo.Connect(ctx, clientOptions)
+	if err != nil {
+		//log.Fatal(err)
+		panic(err)
+	}
+
+	// Пинг сервера для проверки соединения
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Создание или переключение на базу данных
+	dbName := "shopping_lists_db"
+	db := client.Database(dbName)
+
+	// Создание коллекции
+
+	shoppingListCollection := db.Collection("lists")
+
+	itemCollection := db.Collection("items")
+
+	userCollection := db.Collection("users")
+
+	return &MongoDb{
+		ShoppingListCollection: shoppingListCollection,
+		ItemCollection:         itemCollection,
+		UserCollection:         userCollection,
+	}
+}
+
+func (m *MongoDb) GetItems(ctx context.Context) []model.Item {
+	items, err := m.ItemCollection.Find(ctx, bson.D{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var ls []model.Item
+	err = items.All(ctx, &ls)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return ls
+}
+
+func (m *MongoDb) GetItemById(ctx context.Context, id string) ([]model.Item, error) {
+	items, err := m.ItemCollection.Find(ctx, bson.D{{"id", id}})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var ls []model.Item
+	err = items.All(ctx, &ls)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(ls) == 0 {
+		return nil, errors.New("NOT FOUND")
+	}
+	return ls, nil
+}
+
+func (m *MongoDb) DeleteItemById(ctx context.Context, id string) (*mongo.DeleteResult, error) {
+	items, err := m.ItemCollection.Find(ctx, bson.D{{"id", id}})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var ls []model.Item
+	err = items.All(ctx, &ls)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(ls) == 0 {
+		return nil, errors.New("NOT FOUND")
+	}
+	res, err := m.ItemCollection.DeleteOne(ctx, bson.D{{"id", id}})
+	if err != nil {
+		log.Fatal(err)
+	}
+	return res, nil
+}
+
+func (m *MongoDb) GetSls(ctx context.Context) []model.ShoppingList {
+	lists, err := m.ShoppingListCollection.Find(ctx, bson.D{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var ls []model.ShoppingList
+	err = lists.All(ctx, &ls)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return ls
+}
+
+func (m *MongoDb) GetSlById(ctx context.Context, id string) ([]model.ShoppingList, error) {
+	items, err := m.ShoppingListCollection.Find(ctx, bson.D{{"id", id}})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var ls []model.ShoppingList
+	err = items.All(ctx, &ls)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(ls) == 0 {
+		return nil, errors.New("NOT FOUND")
+	}
+	return ls, nil
+}
+
+func (m *MongoDb) DeleteSlById(ctx context.Context, id string) (*mongo.DeleteResult, error) {
+	lists, err := m.ShoppingListCollection.Find(ctx, bson.D{{"id", id}})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var ls []model.ShoppingList
+	err = lists.All(ctx, &ls)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(ls) == 0 {
+		return nil, errors.New("NOT FOUND")
+	}
+	res, err := m.ShoppingListCollection.DeleteOne(ctx, bson.D{{"id", id}})
+	if err != nil {
+		log.Fatal(err)
+	}
+	return res, nil
+}
+
+func (m *MongoDb) UpdateSl(ctx context.Context, id string, body []byte) (*mongo.UpdateResult, error) {
+	lists, err := m.ShoppingListCollection.Find(ctx, bson.D{{"id", id}})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var ls []model.ShoppingList
+	err = lists.All(ctx, &ls)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(ls) == 0 {
+		return nil, errors.New("NOT FOUND")
+	}
+	var sl model.UpdateShoppingListRequest
+	sl.UpdatedAt = time.Now().UTC()
+	err = json.Unmarshal(body, &sl)
+	if err != nil {
+		return nil, errors.New("ERROR TO UNMARSHALL")
+	}
+	update := bson.D{
+		{"$set", sl},
+	}
+	res, err := m.ShoppingListCollection.UpdateOne(ctx, bson.D{{"id", id}}, update)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return res, nil
+}
+
+func (m *MongoDb) UpdateItem(ctx context.Context, id string, body []byte) (*mongo.UpdateResult, error) {
+	items, err := m.ItemCollection.Find(ctx, bson.D{{"id", id}})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var ls []model.ShoppingList
+	err = items.All(ctx, &ls)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(ls) == 0 {
+		return nil, errors.New("NOT FOUND")
+	}
+	var item model.UpdateItemRequest
+	item.UpdatedAt = time.Now().UTC()
+	err = json.Unmarshal(body, &item)
+	if err != nil {
+		return nil, errors.New("ERROR TO UNMARSHALL")
+	}
+	update := bson.D{
+		{"$set", item},
+	}
+	res, err := m.ItemCollection.UpdateOne(ctx, bson.D{{"id", id}}, update)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return res, nil
+}
+
+func (m *MongoDb) Registration(ctx context.Context, name, password string) *model.User {
+	var user *model.User
+	user = model.NewUser(name, password)
+	_, err := m.UserCollection.InsertOne(ctx, user)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return user
+}
+
+func (m *MongoDb) Login(ctx context.Context, user *model.User) (string, error) {
+	if user.State != 1 {
+		return "", errors.New("USER NOT ACTIVE")
+	}
+	users, err := m.UserCollection.Find(ctx, bson.D{{"id", user.Id}})
+	if err != nil {
+		log.Fatal(err)
+	}
+	var u []model.User
+	err = users.All(ctx, &u)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(u) == 0 {
+		return "", errors.New("NOT FOUND")
+	} else {
+		if u[0].State != 1 {
+			return "", errors.New("USER NOT ACTIVE")
+		} else if u[0].Password == user.Password && u[0].Name == user.Name {
+			secretKey := []byte(config.Cfg.Secret)
+			token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+				"id":       user.Id,
+				"name":     user.Name,
+				"password": user.Password,
+				"state":    1,
+			})
+			tokenString, err := token.SignedString(secretKey)
+			if err != nil {
+				return "", err
+			}
+			return tokenString, nil
+		}
+	}
+	return "", errors.New("NOT FOUND")
+
 }
