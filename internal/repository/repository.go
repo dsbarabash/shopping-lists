@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/dsbarabash/shopping-lists/internal/config"
 	"github.com/dsbarabash/shopping-lists/internal/model"
+	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -263,20 +264,35 @@ func FillSlices() {
 	UserList.LoadFromFile()
 }
 
-func ConnectMongoDb() *MongoDb {
+func ConnectRedisDb() (*redis.Client, error) {
+	ctx := context.Background()
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379", // Адрес и порт Redis-сервера
+		Password: "",               // Пароль (если есть)
+		DB:       0,                // Номер базы данных
+	})
+
+	// Проверка соединения
+	_, err := client.Ping(ctx).Result()
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
+func ConnectMongoDb() (*MongoDb, error) {
 	ctx := context.Background()
 	// Подключение к MongoDB
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		//log.Fatal(err)
-		panic(err)
+		return nil, err
 	}
 
 	// Пинг сервера для проверки соединения
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	// Создание или переключение на базу данных
@@ -295,7 +311,7 @@ func ConnectMongoDb() *MongoDb {
 		ShoppingListCollection: shoppingListCollection,
 		ItemCollection:         itemCollection,
 		UserCollection:         userCollection,
-	}
+	}, nil
 }
 
 func (m *MongoDb) GetItems(ctx context.Context) []model.Item {
