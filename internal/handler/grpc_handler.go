@@ -2,9 +2,9 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/model"
 	"github.com/dsbarabash/shopping-lists/internal/proto_api/pkg/grpc/v1/shopping_list_api"
+	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -16,11 +16,12 @@ import (
 	"time"
 )
 
-type Server struct {
+type GrpcServer struct {
 	shopping_list_api.ShoppingListServiceServer
+	MongoDb *repository.MongoDb
 }
 
-func (c *Controller) CreateShoppingList(
+func (s *GrpcServer) CreateShoppingList(
 	ctx context.Context,
 	req *shopping_list_api.CreateShoppingListRequest,
 ) (*shopping_list_api.CreateShoppingListResponse, error) {
@@ -30,20 +31,20 @@ func (c *Controller) CreateShoppingList(
 	if req.UserId == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "UserId не должен быть пустым")
 	}
-	iID, err := uuid.NewUUID()
+	ID, err := uuid.NewUUID()
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "%s", err)
 	}
 	sl := &model.ShoppingList{
-		Id:     iID.String(),
+		Id:     ID.String(),
 		Title:  req.Title,
 		UserId: req.UserId,
 		Items:  req.Items,
 	}
-	c.MongoDb.AddShoppingList(ctx, sl)
+	s.MongoDb.AddShoppingList(ctx, sl)
 	return &shopping_list_api.CreateShoppingListResponse{
 		ShoppingList: &shopping_list_api.ShoppingList{
-			Id:     iID.String(),
+			Id:     ID.String(),
 			Title:  req.Title,
 			UserId: req.UserId,
 			//CreatedAt:       time.Now(),
@@ -54,14 +55,19 @@ func (c *Controller) CreateShoppingList(
 
 }
 
-func (c *Controller) UpdateShoppingList(
+func (s *GrpcServer) UpdateShoppingList(
 	ctx context.Context,
 	req *shopping_list_api.UpdateShoppingListRequest,
 ) (*shopping_list_api.UpdateShoppingListResponse, error) {
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	_, err := c.MongoDb.UpdateSl(ctx, req.GetId(), []byte(fmt.Sprintf(`{"Title": %s, "UserId": %s, "Items": %s}`, req.Title, req.UserId, req.Items)))
+	sl := model.UpdateShoppingListRequest{
+		Title:  req.GetTitle(),
+		UserId: req.GetUserId(),
+		Items:  req.Items,
+	}
+	_, err := s.MongoDb.UpdateSl(ctx, req.GetId(), sl)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
@@ -75,27 +81,27 @@ func (c *Controller) UpdateShoppingList(
 	}, nil
 }
 
-func (c *Controller) DeleteShoppingList(
+func (s *GrpcServer) DeleteShoppingList(
 	ctx context.Context,
 	req *shopping_list_api.DeleteShoppingListRequest,
 ) (*shopping_list_api.DeleteShoppingListResponse, error) {
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	_, err := c.MongoDb.DeleteSlById(ctx, req.GetId())
+	_, err := s.MongoDb.DeleteSlById(ctx, req.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
 	return nil, nil
 }
-func (c *Controller) GetShoppingList(
+func (s *GrpcServer) GetShoppingList(
 	ctx context.Context,
 	req *shopping_list_api.GetShoppingListRequest,
 ) (*shopping_list_api.GetShoppingListResponse, error) {
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	sl, err := c.MongoDb.GetSlById(ctx, req.GetId())
+	sl, err := s.MongoDb.GetSlById(ctx, req.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
@@ -110,9 +116,9 @@ func (c *Controller) GetShoppingList(
 
 }
 
-func (c *Controller) GetShoppingListsGrpc(ctx context.Context, _ *emptypb.Empty) (*shopping_list_api.GetShoppingListsResponse, error) {
+func (s *GrpcServer) GetShoppingLists(ctx context.Context, _ *emptypb.Empty) (*shopping_list_api.GetShoppingListsResponse, error) {
 	var sl []*shopping_list_api.ShoppingList
-	list := c.MongoDb.GetSls(ctx)
+	list := s.MongoDb.GetSls(ctx)
 	for _, i := range list {
 		sl = append(sl, &shopping_list_api.ShoppingList{
 			Id:     i.Id,
@@ -126,7 +132,7 @@ func (c *Controller) GetShoppingListsGrpc(ctx context.Context, _ *emptypb.Empty)
 	}, nil
 }
 
-func (c *Controller) CreateItem(
+func (s *GrpcServer) CreateItem(
 	ctx context.Context,
 	req *shopping_list_api.CreateItemRequest,
 ) (*shopping_list_api.CreateItemResponse, error) {
@@ -152,7 +158,7 @@ func (c *Controller) CreateItem(
 		UserId:         req.UserId,
 		ShoppingListId: req.ShoppingListId,
 	}
-	c.MongoDb.AddItem(ctx, item)
+	s.MongoDb.AddItem(ctx, item)
 	return &shopping_list_api.CreateItemResponse{
 		Item: &shopping_list_api.Item{
 			Id:      iID.String(),
@@ -168,14 +174,22 @@ func (c *Controller) CreateItem(
 
 }
 
-func (c *Controller) UpdateItem(
+func (s *GrpcServer) UpdateItem(
 	ctx context.Context,
 	req *shopping_list_api.UpdateItemRequest,
 ) (*shopping_list_api.UpdateItemResponse, error) {
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	_, err := c.MongoDb.UpdateItem(ctx, req.GetId(), []byte(fmt.Sprintf(`{"Title": %s, "Comment": %s, "IsDone": %s, "UserId": %s, "ShoppingListId": %s}`, req.Title, req.Comment, false, req.UserId, req.ShoppingListId)))
+	item := model.UpdateItemRequest{
+		Title:          req.Title,
+		Comment:        req.Comment,
+		IsDone:         false,
+		UserId:         req.UserId,
+		ShoppingListId: req.ShoppingListId,
+	}
+	item.UpdatedAt = time.Now().UTC()
+	_, err := s.MongoDb.UpdateItem(ctx, req.GetId(), item)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
@@ -192,28 +206,28 @@ func (c *Controller) UpdateItem(
 
 }
 
-func (c *Controller) DeleteItem(
+func (s *GrpcServer) DeleteItem(
 	ctx context.Context,
 	req *shopping_list_api.DeleteItemRequest,
 ) (*shopping_list_api.DeleteItemResponse, error) {
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	_, err := c.MongoDb.DeleteItemById(ctx, req.GetId())
+	_, err := s.MongoDb.DeleteItemById(ctx, req.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
 	return nil, nil
 }
 
-func (c *Controller) GetItem(
+func (s *GrpcServer) GetItem(
 	ctx context.Context,
 	req *shopping_list_api.GetItemRequest,
 ) (*shopping_list_api.GetItemResponse, error) {
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	item, err := c.MongoDb.GetItemById(ctx, req.GetId())
+	item, err := s.MongoDb.GetItemById(ctx, req.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
@@ -229,9 +243,9 @@ func (c *Controller) GetItem(
 	}, nil
 }
 
-func (c *Controller) GetItemsGrpc(ctx context.Context, _ *emptypb.Empty) (*shopping_list_api.GetItemsResponse, error) {
+func (s *GrpcServer) GetItems(ctx context.Context, _ *emptypb.Empty) (*shopping_list_api.GetItemsResponse, error) {
 	var items []*shopping_list_api.Item
-	list := c.MongoDb.GetItems(ctx)
+	list := s.MongoDb.GetItems(ctx)
 	for _, i := range list {
 		items = append(items, &shopping_list_api.Item{
 			Id:             i.Id,

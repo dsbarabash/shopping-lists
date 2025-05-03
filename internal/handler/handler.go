@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-type Controller struct {
+type RestServer struct {
 	MongoDb *repository.MongoDb
 }
 
@@ -25,7 +25,7 @@ type Controller struct {
 // @Success 200 {string}  string "Login successful"
 // @Failure 400 {string} string "Invalid request"
 // @Router /registration [post]
-func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
+func (s *RestServer) Login(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -50,7 +50,7 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := c.MongoDb.Login(r.Context(), &user)
+	token, err := s.MongoDb.Login(r.Context(), &user)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
@@ -71,7 +71,7 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Registration successful"
 // @Failure 400 {string} string "Invalid request"
 // @Router /login [post]
-func (c *Controller) Registration(w http.ResponseWriter, r *http.Request) {
+func (s *RestServer) Registration(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -95,7 +95,7 @@ func (c *Controller) Registration(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": "Password is empty"}`))
 		return
 	}
-	c.MongoDb.Registration(r.Context(), user.Name, user.Password)
+	s.MongoDb.Registration(r.Context(), user.Name, user.Password)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`{"success": true}`)))
@@ -111,7 +111,7 @@ func (c *Controller) Registration(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Item added"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/item/ [post]
-func (c *Controller) AddItem(w http.ResponseWriter, r *http.Request) {
+func (s *RestServer) AddItem(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -148,7 +148,7 @@ func (c *Controller) AddItem(w http.ResponseWriter, r *http.Request) {
 	it.CreatedAt = time.Now()
 	it.UpdatedAt = time.Now()
 	it.IsDone = false
-	c.MongoDb.AddItem(r.Context(), &it)
+	s.MongoDb.AddItem(r.Context(), &it)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status": "ok"}`))
 	return
@@ -163,7 +163,7 @@ func (c *Controller) AddItem(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Shopping list added"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/shopping_list/ [post]
-func (c *Controller) AddShoppingList(w http.ResponseWriter, r *http.Request) {
+func (s *RestServer) AddShoppingList(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -196,7 +196,7 @@ func (c *Controller) AddShoppingList(w http.ResponseWriter, r *http.Request) {
 	sl.UpdatedAt = time.Now()
 	sl.Items = make([]string, 0)
 	sl.State = 1
-	c.MongoDb.AddShoppingList(r.Context(), &sl)
+	s.MongoDb.AddShoppingList(r.Context(), &sl)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status": "ok"}`))
 	return
@@ -210,8 +210,8 @@ func (c *Controller) AddShoppingList(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Items"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/items [get]
-func (c *Controller) GetItems(w http.ResponseWriter, r *http.Request) {
-	list := c.MongoDb.GetItems(r.Context())
+func (s *RestServer) GetItems(w http.ResponseWriter, r *http.Request) {
+	list := s.MongoDb.GetItems(r.Context())
 	data, err := json.Marshal(struct {
 		Success bool `json:"success"`
 		Item    []model.Item
@@ -236,8 +236,8 @@ func (c *Controller) GetItems(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Shopping lists"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/shopping_lists [get]
-func (c *Controller) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
-	list := c.MongoDb.GetSls(r.Context())
+func (s *RestServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
+	list := s.MongoDb.GetSls(r.Context())
 	data, err := json.Marshal(struct {
 		Success bool `json:"success"`
 		Sl      []model.ShoppingList
@@ -262,9 +262,9 @@ func (c *Controller) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Item"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/item/{id} [get]
-func (c *Controller) GetItemById(w http.ResponseWriter, r *http.Request) {
+func (s *RestServer) GetItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	item, err := c.MongoDb.GetItemById(r.Context(), id)
+	item, err := s.MongoDb.GetItemById(r.Context(), id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": "Item with this Id not found"}`))
@@ -294,9 +294,9 @@ func (c *Controller) GetItemById(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Shopping list"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/shopping_list/{id} [get]
-func (c *Controller) GetShoppingListById(w http.ResponseWriter, r *http.Request) {
+func (s *RestServer) GetShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	sl, err := c.MongoDb.GetSlById(r.Context(), id)
+	sl, err := s.MongoDb.GetSlById(r.Context(), id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": "Shopping list with this Id not found"}`))
@@ -326,9 +326,9 @@ func (c *Controller) GetShoppingListById(w http.ResponseWriter, r *http.Request)
 // @Success 200 {string}  string "Item deleted"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/item/{id} [delete]
-func (c *Controller) DeleteItemById(w http.ResponseWriter, r *http.Request) {
+func (s *RestServer) DeleteItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	_, err := c.MongoDb.DeleteItemById(r.Context(), id)
+	_, err := s.MongoDb.DeleteItemById(r.Context(), id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": "Item with this Id not found"}`))
@@ -346,9 +346,9 @@ func (c *Controller) DeleteItemById(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {string}  string "Shopping list deleted"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/shopping_list/{id} [delete]
-func (c *Controller) DeleteShoppingListById(w http.ResponseWriter, r *http.Request) {
+func (s *RestServer) DeleteShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	_, err := c.MongoDb.DeleteSlById(r.Context(), id)
+	_, err := s.MongoDb.DeleteSlById(r.Context(), id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": "Shopping list with this Id not found"}`))
@@ -367,7 +367,7 @@ func (c *Controller) DeleteShoppingListById(w http.ResponseWriter, r *http.Reque
 // @Success 200 {string}  string "Shopping list updated"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/shopping_list/{id} [put]
-func (c *Controller) UpdateShoppingListById(w http.ResponseWriter, r *http.Request) {
+func (s *RestServer) UpdateShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -375,7 +375,15 @@ func (c *Controller) UpdateShoppingListById(w http.ResponseWriter, r *http.Reque
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	_, err = c.MongoDb.UpdateSl(r.Context(), id, body)
+	var sl model.UpdateShoppingListRequest
+	err = json.Unmarshal(body, &sl)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+		return
+	}
+	sl.UpdatedAt = time.Now().UTC()
+	_, err = s.MongoDb.UpdateSl(r.Context(), id, sl)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
@@ -394,7 +402,7 @@ func (c *Controller) UpdateShoppingListById(w http.ResponseWriter, r *http.Reque
 // @Success 200 {string}  string "Item updated"
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/item/{id} [put]
-func (c *Controller) UpdateItemById(w http.ResponseWriter, r *http.Request) {
+func (s *RestServer) UpdateItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -402,7 +410,15 @@ func (c *Controller) UpdateItemById(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	_, err = c.MongoDb.UpdateItem(r.Context(), id, body)
+	var item model.UpdateItemRequest
+	err = json.Unmarshal(body, &item)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+		return
+	}
+	item.UpdatedAt = time.Now().UTC()
+	_, err = s.MongoDb.UpdateItem(r.Context(), id, item)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
