@@ -205,7 +205,7 @@ func (m *MongoDb) UpdateSl(ctx context.Context, id string, sl model.UpdateShoppi
 		return nil, errors.New("NOT FOUND")
 	}
 	update := bson.D{
-		{"$set", sl},
+		primitive.E{Key: "$set", Value: sl},
 	}
 	res, err := m.ShoppingListCollection.UpdateOne(ctx, bson.D{primitive.E{Key: "id", Value: id}}, update)
 	if err != nil {
@@ -228,7 +228,7 @@ func (m *MongoDb) UpdateItem(ctx context.Context, id string, item model.UpdateIt
 		return nil, errors.New("NOT FOUND")
 	}
 	update := bson.D{
-		{"$set", item},
+		primitive.E{Key: "$set", Value: item},
 	}
 	res, err := m.ItemCollection.UpdateOne(ctx, bson.D{primitive.E{Key: "id", Value: id}}, update)
 	if err != nil {
