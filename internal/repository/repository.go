@@ -8,6 +8,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
@@ -93,7 +94,7 @@ func ConnectMongoDb() (*MongoDb, error) {
 }
 
 func (m *MongoDb) GetItems(ctx context.Context) []model.Item {
-	items, err := m.ItemCollection.Find(ctx, bson.D{})
+	items, err := m.ItemCollection.Find(ctx, bson.D{primitive.E{}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -106,7 +107,7 @@ func (m *MongoDb) GetItems(ctx context.Context) []model.Item {
 }
 
 func (m *MongoDb) GetItemById(ctx context.Context, id string) ([]model.Item, error) {
-	items, err := m.ItemCollection.Find(ctx, bson.D{{"id", id}})
+	items, err := m.ItemCollection.Find(ctx, bson.D{primitive.E{Key: "id", Value: id}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -122,7 +123,7 @@ func (m *MongoDb) GetItemById(ctx context.Context, id string) ([]model.Item, err
 }
 
 func (m *MongoDb) DeleteItemById(ctx context.Context, id string) (*mongo.DeleteResult, error) {
-	items, err := m.ItemCollection.Find(ctx, bson.D{{"id", id}})
+	items, err := m.ItemCollection.Find(ctx, bson.D{primitive.E{Key: "id", Value: id}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -134,7 +135,7 @@ func (m *MongoDb) DeleteItemById(ctx context.Context, id string) (*mongo.DeleteR
 	if len(ls) == 0 {
 		return nil, errors.New("NOT FOUND")
 	}
-	res, err := m.ItemCollection.DeleteOne(ctx, bson.D{{"id", id}})
+	res, err := m.ItemCollection.DeleteOne(ctx, bson.D{primitive.E{Key: "id", Value: id}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -142,7 +143,7 @@ func (m *MongoDb) DeleteItemById(ctx context.Context, id string) (*mongo.DeleteR
 }
 
 func (m *MongoDb) GetSls(ctx context.Context) []model.ShoppingList {
-	lists, err := m.ShoppingListCollection.Find(ctx, bson.D{})
+	lists, err := m.ShoppingListCollection.Find(ctx, bson.D{primitive.E{}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -155,7 +156,7 @@ func (m *MongoDb) GetSls(ctx context.Context) []model.ShoppingList {
 }
 
 func (m *MongoDb) GetSlById(ctx context.Context, id string) ([]model.ShoppingList, error) {
-	items, err := m.ShoppingListCollection.Find(ctx, bson.D{{"id", id}})
+	items, err := m.ShoppingListCollection.Find(ctx, bson.D{primitive.E{Key: "id", Value: id}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -171,7 +172,7 @@ func (m *MongoDb) GetSlById(ctx context.Context, id string) ([]model.ShoppingLis
 }
 
 func (m *MongoDb) DeleteSlById(ctx context.Context, id string) (*mongo.DeleteResult, error) {
-	lists, err := m.ShoppingListCollection.Find(ctx, bson.D{{"id", id}})
+	lists, err := m.ShoppingListCollection.Find(ctx, bson.D{primitive.E{Key: "id", Value: id}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -183,7 +184,7 @@ func (m *MongoDb) DeleteSlById(ctx context.Context, id string) (*mongo.DeleteRes
 	if len(ls) == 0 {
 		return nil, errors.New("NOT FOUND")
 	}
-	res, err := m.ShoppingListCollection.DeleteOne(ctx, bson.D{{"id", id}})
+	res, err := m.ShoppingListCollection.DeleteOne(ctx, bson.D{primitive.E{Key: "id", Value: id}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -191,7 +192,7 @@ func (m *MongoDb) DeleteSlById(ctx context.Context, id string) (*mongo.DeleteRes
 }
 
 func (m *MongoDb) UpdateSl(ctx context.Context, id string, sl model.UpdateShoppingListRequest) (*mongo.UpdateResult, error) {
-	lists, err := m.ShoppingListCollection.Find(ctx, bson.D{{"id", id}})
+	lists, err := m.ShoppingListCollection.Find(ctx, bson.D{primitive.E{Key: "id", Value: id}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -206,7 +207,7 @@ func (m *MongoDb) UpdateSl(ctx context.Context, id string, sl model.UpdateShoppi
 	update := bson.D{
 		{"$set", sl},
 	}
-	res, err := m.ShoppingListCollection.UpdateOne(ctx, bson.D{{"id", id}}, update)
+	res, err := m.ShoppingListCollection.UpdateOne(ctx, bson.D{primitive.E{Key: "id", Value: id}}, update)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -214,7 +215,7 @@ func (m *MongoDb) UpdateSl(ctx context.Context, id string, sl model.UpdateShoppi
 }
 
 func (m *MongoDb) UpdateItem(ctx context.Context, id string, item model.UpdateItemRequest) (*mongo.UpdateResult, error) {
-	items, err := m.ItemCollection.Find(ctx, bson.D{{"id", id}})
+	items, err := m.ItemCollection.Find(ctx, bson.D{primitive.E{Key: "id", Value: id}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -229,7 +230,7 @@ func (m *MongoDb) UpdateItem(ctx context.Context, id string, item model.UpdateIt
 	update := bson.D{
 		{"$set", item},
 	}
-	res, err := m.ItemCollection.UpdateOne(ctx, bson.D{{"id", id}}, update)
+	res, err := m.ItemCollection.UpdateOne(ctx, bson.D{primitive.E{Key: "id", Value: id}}, update)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -250,7 +251,7 @@ func (m *MongoDb) Login(ctx context.Context, user *model.User) (string, error) {
 	if user.State != 1 {
 		return "", errors.New("USER NOT ACTIVE")
 	}
-	users, err := m.UserCollection.Find(ctx, bson.D{{"id", user.Id}})
+	users, err := m.UserCollection.Find(ctx, bson.D{primitive.E{Key: "id", Value: user.Id}})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -280,5 +281,4 @@ func (m *MongoDb) Login(ctx context.Context, user *model.User) (string, error) {
 		}
 	}
 	return "", errors.New("NOT FOUND")
-
 }
