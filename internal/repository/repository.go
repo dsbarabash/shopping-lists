@@ -219,12 +219,12 @@ func (m *MongoDb) UpdateItem(ctx context.Context, id string, item model.UpdateIt
 	if err != nil {
 		log.Println(err)
 	}
-	var ls []model.ShoppingList
-	err = items.All(ctx, &ls)
+	var it []model.Item
+	err = items.All(ctx, &it)
 	if err != nil {
 		log.Println(err)
 	}
-	if len(ls) == 0 {
+	if len(it) == 0 {
 		return nil, errors.New("NOT FOUND")
 	}
 	update := bson.D{
