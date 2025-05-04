@@ -19,6 +19,7 @@ import (
 type GrpcServer struct {
 	shopping_list_api.ShoppingListServiceServer
 	MongoDb *repository.MongoDb
+	Model   model.DobrinyaModel
 }
 
 func (s *GrpcServer) CreateShoppingList(
@@ -189,7 +190,7 @@ func (s *GrpcServer) UpdateItem(
 		ShoppingListId: req.ShoppingListId,
 	}
 	item.UpdatedAt = time.Now().UTC()
-	_, err := s.MongoDb.UpdateItem(ctx, req.GetId(), item)
+	_, err := s.Model.Repository.UpdateItem(ctx, req.GetId(), item)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, err.Error())
 	}

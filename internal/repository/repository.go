@@ -214,19 +214,20 @@ func (m *MongoDb) UpdateSl(ctx context.Context, id string, sl model.UpdateShoppi
 	return res, nil
 }
 
-func (m *MongoDb) UpdateItem(ctx context.Context, id string, item model.UpdateItemRequest) (*mongo.UpdateResult, error) {
+func (m *MongoDb) FindItem(ctx context.Context, id string) (*model.Item, error) {
 	items, err := m.ItemCollection.Find(ctx, bson.D{primitive.E{Key: "id", Value: id}})
 	if err != nil {
 		log.Fatal(err)
 	}
-	var ls []model.ShoppingList
-	err = items.All(ctx, &ls)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(ls) == 0 {
+	var it []model.Item
+	err = items.All(ctx, &it)
+	if len(it) == 0 {
 		return nil, errors.New("NOT FOUND")
 	}
+	return &it[0], nil
+}
+
+func (m *MongoDb) UpdateItem(ctx context.Context, id string, item model.UpdateItemRequest) (*mongo.UpdateResult, error) {
 	update := bson.D{
 		primitive.E{Key: "$set", Value: item},
 	}

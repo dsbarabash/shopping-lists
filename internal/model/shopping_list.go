@@ -1,15 +1,23 @@
 package model
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"time"
 )
 
 type ShoppingLists interface {
 	UpdateShoppingList(string, []string)
 	String() string
+}
+
+type DobrinyaModel struct {
+	Repository repository.MongoDb
 }
 
 type ShoppingList struct {
@@ -22,7 +30,7 @@ type ShoppingList struct {
 	State     State     `json:"state"`
 }
 
-func NewShoppingList(title string, userId string) (*ShoppingList, error) {
+func (s *ShoppingList) NewShoppingList(title string, userId string) (*ShoppingList, error) {
 	if title == "" {
 		return nil, errors.New("title must not be empty")
 	} else if userId == "" {
@@ -89,11 +97,16 @@ func NewItem(title string, comment string, userId string, shoppingListId string)
 	}, nil
 }
 
-func (i *Item) UpdateItem(title string, comment string, isDone bool) {
-	i.Title = title
-	i.Comment = comment
-	i.IsDone = isDone
-	i.UpdatedAt = time.Now()
+func (m *DobrinyaModel) UpdateItem(ctx context.Context, id string, u UpdateItemRequest) (*Item, error) {
+	item, err := m.Repository.FindItem(ctx, id)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, err.Error())
+	}
+	_, err = m.Repository.UpdateItem(ctx, id, u)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, err.Error())
+	}
+	return item, nil
 }
 
 func (i Item) String() string {
