@@ -23,50 +23,50 @@ func main() {
 	if err != nil {
 		log.Fatalf("error get request: %s", err.Error())
 	}
-	fmt.Println(res3.String())
+	fmt.Println("Create item ", res3.String())
 
 	res2, err := client.GetItems(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		log.Fatalf("error get request: %s", err.Error())
 	}
-	fmt.Println(res2.String())
+	fmt.Println("GetItems ", res2.String())
 
 	res, err := client.GetItem(context.Background(), &shopping_list_api.GetItemRequest{Id: res2.Items[0].Id})
 	if err != nil {
 		log.Fatalf("error get request: %s", err.Error())
 	}
-	fmt.Println(res.String())
+	fmt.Println("GetItem ", res.String())
 
 	res4, err := client.UpdateItem(context.Background(), &shopping_list_api.UpdateItemRequest{Id: res2.Items[0].Id, Title: "Test_title3", UserId: "65656", ShoppingListId: "8989989"})
 	if err != nil {
 		log.Fatalf("error get request: %s", err.Error())
 	}
-	fmt.Println(res4.String())
+	fmt.Println("UpdateItem ", res4.String())
 
 	res5, err := client.DeleteItem(context.Background(), &shopping_list_api.DeleteItemRequest{Id: res2.Items[0].Id})
 	if err != nil {
 		log.Fatalf("error get request: %s", err.Error())
 	}
-	fmt.Println(res5.String())
+	fmt.Println("UpdateItem ", res5.String())
 
 	res8, err := client.CreateShoppingList(context.Background(), &shopping_list_api.CreateShoppingListRequest{Title: "Test_title1", UserId: "0000", Items: []string{"234", "567"}})
 	if err != nil {
 		log.Fatalf("error get request: %s", err.Error())
 	}
-	fmt.Println(res8.String())
+	fmt.Println("CreateShoppingList ", res8.String())
 
 	res7, err := client.GetShoppingLists(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		log.Fatalf("error get request: %s", err.Error())
 	}
-	fmt.Println(res7.String())
+	fmt.Println("GetShoppingLists ", res7.String())
 
 	res6, err := client.GetShoppingList(context.Background(), &shopping_list_api.GetShoppingListRequest{Id: res7.ShoppingList[0].Id})
 	if err != nil {
 		log.Fatalf("error get request: %s", err.Error())
 	}
 
-	fmt.Println(res6.String())
+	fmt.Println("GetShoppingList ", res6.String())
 
 	res9, err := client.UpdateShoppingList(context.Background(), &shopping_list_api.UpdateShoppingListRequest{Id: res7.ShoppingList[0].Id, Title: "Test_title3", UserId: "123123", Items: []string{"234", "567", "875"}})
 	if err != nil {

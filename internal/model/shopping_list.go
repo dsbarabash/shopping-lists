@@ -18,7 +18,7 @@ type ShoppingList struct {
 	State     State     `json:"state"`
 }
 
-func NewShoppingList1(dto CreateShoppingListDTO) (*ShoppingList, error) {
+func NewShoppingList1(dto CreateShoppingListDTO) *ShoppingList {
 	return &ShoppingList{
 		Id:        dto.Id,
 		Title:     dto.Title,
@@ -27,18 +27,16 @@ func NewShoppingList1(dto CreateShoppingListDTO) (*ShoppingList, error) {
 		UpdatedAt: time.Now(),
 		Items:     make([]string, 0),
 		State:     1,
-	}, nil
+	}
 }
 
-func UpdateShoppingList1(dto UpdateShoppingListDTO) (*ShoppingList, error) {
+func UpdateShoppingList1(dto UpdateShoppingListDTO) *ShoppingList {
 	return &ShoppingList{
-		Id:        dto.Id,
 		Title:     dto.Title,
 		UserId:    dto.UserId,
 		UpdatedAt: time.Now(),
 		Items:     make([]string, 0),
-		State:     dto.State,
-	}, nil
+	}
 }
 
 type CreateShoppingListDTO struct {
@@ -52,12 +50,10 @@ type CreateShoppingListDTO struct {
 }
 
 type UpdateShoppingListDTO struct {
-	Id        string    `json:"id" bson:"id"`
 	Title     string    `json:"title" bson:"title"`
 	UserId    string    `json:"user_id" bson:"user_id"`
 	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
 	Items     []string  `json:"items" bson:"items"`
-	State     State     `json:"state" bson:"state"`
 }
 
 func NewShoppingList(title string, userId string) (*ShoppingList, error) {
@@ -99,6 +95,48 @@ type Item struct {
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 	ShoppingListId string    `json:"shopping_list_id"`
+}
+
+type CreateItemDTO struct {
+	Id             string    `json:"id" bson:"id"`
+	Title          string    `json:"title" bson:"title"`
+	Comment        string    `json:"comment"`
+	IsDone         bool      `json:"is_done"`
+	UserId         string    `json:"user_id" bson:"user_id"`
+	CreatedAt      time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at" bson:"updated_at"`
+	ShoppingListId string    `json:"shopping_list_id" bson:"shopping_list_id"`
+}
+
+type UpdateItemDTO struct {
+	Title          string    `json:"title" bson:"title"`
+	Comment        string    `json:"comment"`
+	UserId         string    `json:"user_id" bson:"user_id"`
+	UpdatedAt      time.Time `json:"updated_at" bson:"updated_at"`
+	ShoppingListId string    `json:"shopping_list_id" bson:"shopping_list_id"`
+}
+
+func NewItem1(dto CreateItemDTO) *Item {
+	return &Item{
+		Id:             dto.Id,
+		Title:          dto.Title,
+		Comment:        dto.Comment,
+		IsDone:         dto.IsDone,
+		UserId:         dto.UserId,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+		ShoppingListId: dto.ShoppingListId,
+	}
+}
+
+func UpdateItem1(dto UpdateItemDTO) *Item {
+	return &Item{
+		Title:          dto.Title,
+		Comment:        dto.Comment,
+		UserId:         dto.UserId,
+		UpdatedAt:      time.Now(),
+		ShoppingListId: dto.ShoppingListId,
+	}
 }
 
 func NewItem(title string, comment string, userId string, shoppingListId string) (*Item, error) {

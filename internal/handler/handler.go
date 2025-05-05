@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/model"
 	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
@@ -148,7 +149,18 @@ func (s *RestServer) AddItem(w http.ResponseWriter, r *http.Request) {
 	it.CreatedAt = time.Now()
 	it.UpdatedAt = time.Now()
 	it.IsDone = false
-	s.MongoDb.AddItem(r.Context(), &it)
+	err = s.MongoDb.AddItem(r.Context(), &it)
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		}
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status": "ok"}`))
 	return
@@ -196,7 +208,18 @@ func (s *RestServer) AddShoppingList(w http.ResponseWriter, r *http.Request) {
 	sl.UpdatedAt = time.Now()
 	sl.Items = make([]string, 0)
 	sl.State = 1
-	s.MongoDb.AddShoppingList(r.Context(), &sl)
+	err = s.MongoDb.AddShoppingList(r.Context(), &sl)
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		}
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status": "ok"}`))
 	return
@@ -211,10 +234,21 @@ func (s *RestServer) AddShoppingList(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/items [get]
 func (s *RestServer) GetItems(w http.ResponseWriter, r *http.Request) {
-	list := s.MongoDb.GetItems(r.Context())
+	list, err := s.MongoDb.GetItems(r.Context())
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		}
+	}
 	data, err := json.Marshal(struct {
 		Success bool `json:"success"`
-		Item    []model.Item
+		Item    []*model.Item
 	}{
 		Success: true,
 		Item:    list,
@@ -237,10 +271,21 @@ func (s *RestServer) GetItems(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/shopping_lists [get]
 func (s *RestServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
-	list := s.MongoDb.GetSls(r.Context())
+	list, err := s.MongoDb.GetSls(r.Context())
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		}
+	}
 	data, err := json.Marshal(struct {
 		Success bool `json:"success"`
-		Sl      []model.ShoppingList
+		Sl      []*model.ShoppingList
 	}{
 		Success: true,
 		Sl:      list,
@@ -266,13 +311,19 @@ func (s *RestServer) GetItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	item, err := s.MongoDb.GetItemById(r.Context(), id)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": "Item with this Id not found"}`))
-		return
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		}
 	}
 	data, err := json.Marshal(struct {
 		Success bool `json:"success"`
-		Item    []model.Item
+		Item    *model.Item
 	}{
 		Success: true,
 		Item:    item,
@@ -298,13 +349,19 @@ func (s *RestServer) GetShoppingListById(w http.ResponseWriter, r *http.Request)
 	id := r.PathValue("id")
 	sl, err := s.MongoDb.GetSlById(r.Context(), id)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": "Shopping list with this Id not found"}`))
-		return
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		}
 	}
 	data, err := json.Marshal(struct {
 		Success      bool `json:"success"`
-		ShoppingList []model.ShoppingList
+		ShoppingList *model.ShoppingList
 	}{
 		Success:      true,
 		ShoppingList: sl,
@@ -330,9 +387,15 @@ func (s *RestServer) DeleteItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	err := s.MongoDb.DeleteItemById(r.Context(), id)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": "Item with this Id not found"}`))
-		return
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		}
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
@@ -350,9 +413,15 @@ func (s *RestServer) DeleteShoppingListById(w http.ResponseWriter, r *http.Reque
 	id := r.PathValue("id")
 	err := s.MongoDb.DeleteSlById(r.Context(), id)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": "Shopping list with this Id not found"}`))
-		return
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		}
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
@@ -375,7 +444,7 @@ func (s *RestServer) UpdateShoppingListById(w http.ResponseWriter, r *http.Reque
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	var sl model.UpdateShoppingListRequest
+	var sl *model.ShoppingList
 	err = json.Unmarshal(body, &sl)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -385,9 +454,15 @@ func (s *RestServer) UpdateShoppingListById(w http.ResponseWriter, r *http.Reque
 	sl.UpdatedAt = time.Now().UTC()
 	err = s.MongoDb.UpdateSl(r.Context(), id, sl)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
-		return
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		}
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
@@ -410,7 +485,7 @@ func (s *RestServer) UpdateItemById(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	var item model.UpdateItemRequest
+	var item *model.Item
 	err = json.Unmarshal(body, &item)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -420,9 +495,15 @@ func (s *RestServer) UpdateItemById(w http.ResponseWriter, r *http.Request) {
 	item.UpdatedAt = time.Now().UTC()
 	err = s.MongoDb.UpdateItem(r.Context(), id, item)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
-		return
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		}
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
