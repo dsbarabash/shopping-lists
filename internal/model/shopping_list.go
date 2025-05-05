@@ -1,24 +1,12 @@
 package model
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/google/uuid"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+
 	"time"
 )
-
-type ShoppingLists interface {
-	UpdateShoppingList(string, []string)
-	String() string
-}
-
-type DobryniaModel struct {
-	Repository repository.Db
-}
 
 type ShoppingList struct {
 	Id        string    `json:"id"`
@@ -30,7 +18,49 @@ type ShoppingList struct {
 	State     State     `json:"state"`
 }
 
-func (s *ShoppingList) NewShoppingList(title string, userId string) (*ShoppingList, error) {
+func NewShoppingList1(dto CreateShoppingListDTO) (*ShoppingList, error) {
+	return &ShoppingList{
+		Id:        dto.Id,
+		Title:     dto.Title,
+		UserId:    dto.UserId,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Items:     make([]string, 0),
+		State:     1,
+	}, nil
+}
+
+func UpdateShoppingList1(dto UpdateShoppingListDTO) (*ShoppingList, error) {
+	return &ShoppingList{
+		Id:        dto.Id,
+		Title:     dto.Title,
+		UserId:    dto.UserId,
+		UpdatedAt: time.Now(),
+		Items:     make([]string, 0),
+		State:     dto.State,
+	}, nil
+}
+
+type CreateShoppingListDTO struct {
+	Id        string    `json:"id" bson:"id"`
+	Title     string    `json:"title" bson:"title"`
+	UserId    string    `json:"user_id" bson:"user_id"`
+	CreatedAt time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
+	Items     []string  `json:"items" bson:"items"`
+	State     State     `json:"state" bson:"state"`
+}
+
+type UpdateShoppingListDTO struct {
+	Id        string    `json:"id" bson:"id"`
+	Title     string    `json:"title" bson:"title"`
+	UserId    string    `json:"user_id" bson:"user_id"`
+	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
+	Items     []string  `json:"items" bson:"items"`
+	State     State     `json:"state" bson:"state"`
+}
+
+func NewShoppingList(title string, userId string) (*ShoppingList, error) {
 	if title == "" {
 		return nil, errors.New("title must not be empty")
 	} else if userId == "" {
@@ -58,11 +88,6 @@ func (s *ShoppingList) UpdateShoppingList(title string, items []string) {
 
 func (s ShoppingList) String() string {
 	return fmt.Sprintf("id: \"%s\", title: \"%s\", userId: \"%s\", createdAt: \"%s\", updatedAt: \"%s\"", s.Id, s.Title, s.UserId, s.CreatedAt.Format(time.DateTime), s.UpdatedAt.Format(time.DateTime))
-}
-
-type Items interface {
-	UpdateItem(string, string, bool)
-	String() string
 }
 
 type Item struct {
@@ -108,18 +133,6 @@ type UpdateItemBody struct {
 
 func (u UpdateItemBody) String() string {
 	return fmt.Sprintf("title: \"%s\", comment: \"%s\", isDone: \"%v\", userId: \"%s\", updatedAt: \"%s\", ShoppingListId: \"%s\"", u.Title, u.Comment, u.IsDone, u.UserId, u.UpdatedAt.Format(time.DateTime), u.ShoppingListId)
-}
-func (m *DobryniaModel) UpdateItem(ctx context.Context, id string, u UpdateItemBody) error {
-	_, err := m.Repository.FindItem(ctx, id)
-	if err != nil {
-		return status.Errorf(codes.NotFound, err.Error())
-	}
-	u.UpdatedAt = time.Now().UTC()
-	err = m.Repository.UpdateItem(ctx, id, u.String())
-	if err != nil {
-		return status.Errorf(codes.Internal, err.Error())
-	}
-	return nil
 }
 
 func (i Item) String() string {
