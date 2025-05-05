@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"github.com/dsbarabash/shopping-lists/internal/model"
 	"github.com/dsbarabash/shopping-lists/internal/proto_api/pkg/grpc/v1/shopping_list_api"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
@@ -33,7 +34,11 @@ func (s *GrpcServer) CreateShoppingList(
 	}
 	ID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "%s", err)
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
 	}
 	sl := &model.ShoppingList{
 		Id:     ID.String(),
@@ -69,7 +74,11 @@ func (s *GrpcServer) UpdateShoppingList(
 	}
 	_, err := s.MongoDb.UpdateSl(ctx, req.GetId(), sl)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, err.Error())
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
 	}
 	return &shopping_list_api.UpdateShoppingListResponse{
 		ShoppingList: &shopping_list_api.ShoppingList{
@@ -90,7 +99,11 @@ func (s *GrpcServer) DeleteShoppingList(
 	}
 	_, err := s.MongoDb.DeleteSlById(ctx, req.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, err.Error())
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
 	}
 	return nil, nil
 }
@@ -103,7 +116,11 @@ func (s *GrpcServer) GetShoppingList(
 	}
 	sl, err := s.MongoDb.GetSlById(ctx, req.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, err.Error())
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
 	}
 	return &shopping_list_api.GetShoppingListResponse{
 		ShoppingList: &shopping_list_api.ShoppingList{
@@ -118,7 +135,14 @@ func (s *GrpcServer) GetShoppingList(
 
 func (s *GrpcServer) GetShoppingLists(ctx context.Context, _ *emptypb.Empty) (*shopping_list_api.GetShoppingListsResponse, error) {
 	var sl []*shopping_list_api.ShoppingList
-	list := s.MongoDb.GetSls(ctx)
+	list, err := s.MongoDb.GetSls(ctx)
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+	}
 	for _, i := range list {
 		sl = append(sl, &shopping_list_api.ShoppingList{
 			Id:     i.Id,
@@ -158,7 +182,14 @@ func (s *GrpcServer) CreateItem(
 		UserId:         req.UserId,
 		ShoppingListId: req.ShoppingListId,
 	}
-	s.MongoDb.AddItem(ctx, item)
+	err = s.MongoDb.AddItem(ctx, item)
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+	}
 	return &shopping_list_api.CreateItemResponse{
 		Item: &shopping_list_api.Item{
 			Id:      iID.String(),
@@ -191,7 +222,11 @@ func (s *GrpcServer) UpdateItem(
 	item.UpdatedAt = time.Now().UTC()
 	_, err := s.MongoDb.UpdateItem(ctx, req.GetId(), item)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, err.Error())
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
 	}
 	return &shopping_list_api.UpdateItemResponse{
 		Item: &shopping_list_api.Item{
@@ -215,7 +250,11 @@ func (s *GrpcServer) DeleteItem(
 	}
 	_, err := s.MongoDb.DeleteItemById(ctx, req.GetId())
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, err.Error())
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
 	}
 	return nil, nil
 }
@@ -245,7 +284,14 @@ func (s *GrpcServer) GetItem(
 
 func (s *GrpcServer) GetItems(ctx context.Context, _ *emptypb.Empty) (*shopping_list_api.GetItemsResponse, error) {
 	var items []*shopping_list_api.Item
-	list := s.MongoDb.GetItems(ctx)
+	list, err := s.MongoDb.GetItems(ctx)
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+	}
 	for _, i := range list {
 		items = append(items, &shopping_list_api.Item{
 			Id:             i.Id,
