@@ -4,6 +4,8 @@ import (
 	"github.com/dsbarabash/shopping-lists/internal/handler"
 	"github.com/dsbarabash/shopping-lists/internal/proto_api/pkg/grpc/v1/shopping_list_api"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
+	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
+	"github.com/dsbarabash/shopping-lists/internal/repository/redis"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
@@ -11,11 +13,11 @@ import (
 )
 
 func main() {
-	MongoDb, err := repository.ConnectMongoDb()
+	MongoDb, err := mongo.ConnectMongoDb()
 	if err != nil {
 		log.Fatal(err)
 	}
-	RedisDB, err := repository.ConnectRedisDb()
+	RedisDB, err := redis.ConnectRedisDb()
 	if err != nil {
 		log.Fatal(err)
 	}

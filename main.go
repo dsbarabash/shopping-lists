@@ -4,15 +4,16 @@ import (
 	"context"
 	"github.com/dsbarabash/shopping-lists/internal/app"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
+	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
 	"log"
 )
 
 func main() {
-	MongoDb, err := repository.ConnectMongoDb()
+	MongoDb, err := mongo.ConnectMongoDb()
 	if err != nil {
 		log.Fatal(err)
 	}
-	RedisDB, err := repository.ConnectRedisDb()
+	RedisDB, err := mongo.ConnectRedisDb()
 	if err != nil {
 		log.Fatal(err)
 	}

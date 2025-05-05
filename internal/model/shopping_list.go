@@ -16,8 +16,8 @@ type ShoppingLists interface {
 	String() string
 }
 
-type DobrinyaModel struct {
-	Repository repository.MongoDb
+type DobryniaModel struct {
+	Repository repository.Db
 }
 
 type ShoppingList struct {
@@ -97,20 +97,45 @@ func NewItem(title string, comment string, userId string, shoppingListId string)
 	}, nil
 }
 
-func (m *DobrinyaModel) UpdateItem(ctx context.Context, id string, u UpdateItemRequest) (*Item, error) {
-	item, err := m.Repository.FindItem(ctx, id)
+type UpdateItemBody struct {
+	Title          string    `json:"title"`
+	Comment        string    `json:"comment"`
+	IsDone         bool      `json:"is_done"`
+	UserId         string    `json:"user_id"`
+	ShoppingListId string    `json:"shopping_list_id"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+func (u UpdateItemBody) String() string {
+	return fmt.Sprintf("title: \"%s\", comment: \"%s\", isDone: \"%v\", userId: \"%s\", updatedAt: \"%s\", ShoppingListId: \"%s\"", u.Title, u.Comment, u.IsDone, u.UserId, u.UpdatedAt.Format(time.DateTime), u.ShoppingListId)
+}
+func (m *DobryniaModel) UpdateItem(ctx context.Context, id string, u UpdateItemBody) error {
+	_, err := m.Repository.FindItem(ctx, id)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, err.Error())
+		return status.Errorf(codes.NotFound, err.Error())
 	}
-	_, err = m.Repository.UpdateItem(ctx, id, u)
+	u.UpdatedAt = time.Now().UTC()
+	err = m.Repository.UpdateItem(ctx, id, u.String())
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, err.Error())
+		return status.Errorf(codes.Internal, err.Error())
 	}
-	return item, nil
+	return nil
 }
 
 func (i Item) String() string {
 	return fmt.Sprintf("id: \"%s\", title: \"%s\", comment: \"%s\", isDone: \"%v\", userId: \"%s\", createdAt: \"%s\", updatedAt: \"%s\", ShoppingListId: \"%s\"", i.Id, i.Title, i.Comment, i.IsDone, i.UserId, i.CreatedAt.Format(time.DateTime), i.UpdatedAt.Format(time.DateTime), i.ShoppingListId)
+}
+
+type UpdateShoppingListBody struct {
+	Title     string    `json:"title"`
+	UserId    string    `json:"user_id"`
+	Items     []string  `json:"items"`
+	State     State     `json:"state"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (u UpdateShoppingListBody) String() string {
+	return fmt.Sprintf("Title: \"%s\", UserId: \"%s\", Items: \"%v\", State: \"%s\", UpdatedAt: \"%s\"", u.Title, u.UserId, u.Items, u.State, u.UpdatedAt.Format(time.DateTime))
 }
 
 type CreateItemRequest struct {

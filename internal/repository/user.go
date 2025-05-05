@@ -3,6 +3,7 @@ package repository
 import (
 	"encoding/json"
 	"github.com/dsbarabash/shopping-lists/internal/model"
+	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
 	"io"
 	"log"
 	"os"
@@ -24,7 +25,7 @@ var UserList = UserStore{
 func (u *UserStore) LoadFromFile() {
 	u.Mu.Lock()
 	defer u.Mu.Unlock()
-	items, err := ReadJson(u.FilePath)
+	items, err := mongo.ReadJson(u.FilePath)
 	if err == io.EOF {
 		return
 	} else if err != nil {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/config"
 	"github.com/dsbarabash/shopping-lists/internal/handler"
-	"github.com/dsbarabash/shopping-lists/internal/repository"
+	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
 	"log"
 	"net/http"
 	"os"
@@ -20,7 +20,7 @@ type App struct {
 	server *handler.RestServer
 }
 
-func NewService(ctx context.Context, mongoDB *repository.MongoDb) (*App, error) {
+func NewService(ctx context.Context, mongoDB *mongo.MongoDb) (*App, error) {
 	// Инит баз клиентов
 	c := &handler.RestServer{
 		MongoDb: mongoDB,

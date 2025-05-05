@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/dsbarabash/shopping-lists/internal/model"
 	"github.com/dsbarabash/shopping-lists/internal/proto_api/pkg/grpc/v1/shopping_list_api"
-	"github.com/dsbarabash/shopping-lists/internal/repository"
+	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -18,8 +18,8 @@ import (
 
 type GrpcServer struct {
 	shopping_list_api.ShoppingListServiceServer
-	MongoDb *repository.MongoDb
-	Model   model.DobrinyaModel
+	MongoDb *mongo.MongoDb
+	Model   *model.DobryniaModel
 }
 
 func (s *GrpcServer) CreateShoppingList(
@@ -63,12 +63,12 @@ func (s *GrpcServer) UpdateShoppingList(
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	sl := model.UpdateShoppingListRequest{
+	sl := model.UpdateShoppingListBody{
 		Title:  req.GetTitle(),
 		UserId: req.GetUserId(),
 		Items:  req.Items,
 	}
-	_, err := s.MongoDb.UpdateSl(ctx, req.GetId(), sl)
+	err := s.MongoDb.UpdateSl(ctx, req.GetId(), sl.String())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
@@ -89,7 +89,7 @@ func (s *GrpcServer) DeleteShoppingList(
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	_, err := s.MongoDb.DeleteSlById(ctx, req.GetId())
+	err := s.MongoDb.DeleteSlById(ctx, req.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
@@ -182,15 +182,14 @@ func (s *GrpcServer) UpdateItem(
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	item := model.UpdateItemRequest{
+	item := model.UpdateItemBody{
 		Title:          req.Title,
 		Comment:        req.Comment,
 		IsDone:         false,
 		UserId:         req.UserId,
 		ShoppingListId: req.ShoppingListId,
 	}
-	item.UpdatedAt = time.Now().UTC()
-	_, err := s.Model.Repository.UpdateItem(ctx, req.GetId(), item)
+	err := s.Model.UpdateItem(ctx, req.GetId(), item)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
@@ -214,7 +213,7 @@ func (s *GrpcServer) DeleteItem(
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	_, err := s.MongoDb.DeleteItemById(ctx, req.GetId())
+	err := s.MongoDb.DeleteItemById(ctx, req.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, err.Error())
 	}

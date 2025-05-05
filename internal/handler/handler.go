@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/model"
-	"github.com/dsbarabash/shopping-lists/internal/repository"
+	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
 	_ "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"io"
@@ -13,7 +13,7 @@ import (
 )
 
 type RestServer struct {
-	MongoDb *repository.MongoDb
+	MongoDb *mongo.MongoDb
 }
 
 // Login
@@ -328,7 +328,7 @@ func (s *RestServer) GetShoppingListById(w http.ResponseWriter, r *http.Request)
 // @Router /api/item/{id} [delete]
 func (s *RestServer) DeleteItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	_, err := s.MongoDb.DeleteItemById(r.Context(), id)
+	err := s.MongoDb.DeleteItemById(r.Context(), id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": "Item with this Id not found"}`))
@@ -348,7 +348,7 @@ func (s *RestServer) DeleteItemById(w http.ResponseWriter, r *http.Request) {
 // @Router /api/shopping_list/{id} [delete]
 func (s *RestServer) DeleteShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	_, err := s.MongoDb.DeleteSlById(r.Context(), id)
+	err := s.MongoDb.DeleteSlById(r.Context(), id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": "Shopping list with this Id not found"}`))
@@ -383,7 +383,7 @@ func (s *RestServer) UpdateShoppingListById(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	sl.UpdatedAt = time.Now().UTC()
-	_, err = s.MongoDb.UpdateSl(r.Context(), id, sl)
+	err = s.MongoDb.UpdateSl(r.Context(), id, sl)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
@@ -418,7 +418,7 @@ func (s *RestServer) UpdateItemById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	item.UpdatedAt = time.Now().UTC()
-	_, err = s.MongoDb.UpdateItem(r.Context(), id, item)
+	err = s.MongoDb.UpdateItem(r.Context(), id, item)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
