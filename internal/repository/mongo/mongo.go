@@ -101,6 +101,7 @@ func (m *MongoDb) GetItems(ctx context.Context) ([]*model.Item, error) {
 	items, err := m.ItemCollection.Find(ctx, bson.D{primitive.E{}})
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	var ls []*model.Item
 	err = items.All(ctx, &ls)
@@ -115,6 +116,7 @@ func (m *MongoDb) GetItemById(ctx context.Context, id string) (*model.Item, erro
 	items, err := m.ItemCollection.Find(ctx, bson.D{primitive.E{Key: "id", Value: id}})
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
 	var ls []*model.Item
 	err = items.All(ctx, &ls)
@@ -132,6 +134,7 @@ func (m *MongoDb) DeleteItemById(ctx context.Context, id string) error {
 	items, err := m.ItemCollection.Find(ctx, bson.D{primitive.E{Key: "id", Value: id}})
 	if err != nil {
 		log.Println(err)
+		return err
 	}
 	var ls []model.Item
 	err = items.All(ctx, &ls)
