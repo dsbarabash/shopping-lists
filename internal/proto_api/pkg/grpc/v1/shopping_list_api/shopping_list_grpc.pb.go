@@ -4,6 +4,8 @@
 // - protoc             v6.30.2
 // source: api/grpc/v1/shopping_list.proto
 
+// C:\Projects\Go\protoc-30.2-win64\bin\protoc --go_out=. --go-grpc_out=. api/grpc/v1/shopping_list.proto
+
 package shopping_list_api
 
 import (

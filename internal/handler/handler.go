@@ -8,9 +8,9 @@ import (
 	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
 	_ "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"io"
 	"net/http"
-	"time"
 )
 
 type RestServer struct {
@@ -146,8 +146,8 @@ func (s *RestServer) AddItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	it.Id = slID.String()
-	it.CreatedAt = time.Now()
-	it.UpdatedAt = time.Now()
+	it.CreatedAt = timestamppb.Now()
+	it.UpdatedAt = timestamppb.Now()
 	it.IsDone = false
 	err = s.MongoDb.AddItem(r.Context(), &it)
 	if err != nil {
@@ -204,8 +204,8 @@ func (s *RestServer) AddShoppingList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sl.Id = slID.String()
-	sl.CreatedAt = time.Now()
-	sl.UpdatedAt = time.Now()
+	sl.CreatedAt = timestamppb.Now()
+	sl.UpdatedAt = timestamppb.Now()
 	sl.Items = make([]string, 0)
 	sl.State = 1
 	err = s.MongoDb.AddShoppingList(r.Context(), &sl)
@@ -451,7 +451,7 @@ func (s *RestServer) UpdateShoppingListById(w http.ResponseWriter, r *http.Reque
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	sl.UpdatedAt = time.Now().UTC()
+	sl.UpdatedAt = timestamppb.Now()
 	err = s.MongoDb.UpdateSl(r.Context(), id, sl)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
@@ -492,7 +492,7 @@ func (s *RestServer) UpdateItemById(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	item.UpdatedAt = time.Now().UTC()
+	item.UpdatedAt = timestamppb.Now()
 	err = s.MongoDb.UpdateItem(r.Context(), id, item)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {

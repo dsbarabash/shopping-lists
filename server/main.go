@@ -6,6 +6,7 @@ import (
 	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
 	"github.com/dsbarabash/shopping-lists/internal/repository/redis"
+	"github.com/dsbarabash/shopping-lists/internal/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
@@ -21,6 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	Service, err := service.NewService(MongoDb)
 	logWriter := repository.NewLogWriter(RedisDB)
 	log.SetOutput(logWriter)
 
@@ -33,7 +35,7 @@ func main() {
 			handler.LoggingInterceptor,
 		),
 	)
-	shopping_list_api.RegisterShoppingListServiceServer(s, &handler.GrpcServer{MongoDb: MongoDb})
+	shopping_list_api.RegisterShoppingListServiceServer(s, &handler.GrpcServer{MongoDb: MongoDb, Service: Service})
 
 	reflection.Register(s)
 

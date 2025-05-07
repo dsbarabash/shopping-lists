@@ -1,5 +1,5 @@
 syntax = "proto3";
-
+// C:\Projects\Go\protoc-30.2-win64\bin\protoc --go_out=. --go-grpc_out=. api/grpc/v1/shopping_list.proto
 package shopping_list.v1;
 
 option go_package = "pkg/grpc/v1/shopping_list_api";
@@ -52,7 +52,10 @@ message CreateShoppingListRequest {
   string id = 1;
   string Title = 2;
   string UserId = 4;
-  repeated string items = 5;
+  google.protobuf.Timestamp CreatedAt = 5;
+  google.protobuf.Timestamp UpdatedAt = 6;
+  repeated string Items = 8;
+  State state = 9;
 }
 
 message CreateShoppingListResponse {
@@ -62,9 +65,11 @@ message CreateShoppingListResponse {
 message UpdateShoppingListRequest {
   string id = 1;
   string Title = 2;
-  string Comment = 3;
   string UserId = 4;
-  repeated string items = 5;
+  google.protobuf.Timestamp CreatedAt = 5;
+  google.protobuf.Timestamp UpdatedAt = 6;
+  repeated string Items = 8;
+  State state = 9;
 }
 
 message UpdateShoppingListResponse {
@@ -94,8 +99,11 @@ message CreateItemRequest {
   string id = 1;
   string Title = 2;
   string Comment = 3;
-  string UserId = 4;
-  string ShoppingListId = 5;
+  bool IsDone = 4;
+  string UserId = 5;
+  google.protobuf.Timestamp CreatedAt = 6;
+  google.protobuf.Timestamp UpdatedAt = 7;
+  string ShoppingListId = 8;
 }
 
 message CreateItemResponse {
@@ -106,8 +114,11 @@ message UpdateItemRequest {
   string id = 1;
   string Title = 2;
   string Comment = 3;
-  string UserId = 4;
-  string ShoppingListId = 5;
+  bool IsDone = 4;
+  string UserId = 5;
+  google.protobuf.Timestamp CreatedAt = 6;
+  google.protobuf.Timestamp UpdatedAt = 7;
+  string ShoppingListId = 8;
 }
 
 message UpdateItemResponse {

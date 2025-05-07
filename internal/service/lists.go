@@ -9,12 +9,31 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type Service struct {
+type service struct {
 	repository repository.Db
 }
 
-func (s *Service) CreateShoppingList(ctx context.Context, dto model.CreateShoppingListDTO) error {
-	sl := model.NewShoppingList1(dto)
+type Service interface {
+	CreateShoppingList(ctx context.Context, dto *model.CreateShoppingListDTO) error
+	GetShoppingListById(ctx context.Context, id string) (*model.ShoppingList, error)
+	GetShoppingLists(ctx context.Context) ([]*model.ShoppingList, error)
+	UpdateShoppingList(ctx context.Context, id string, dto *model.UpdateShoppingListDTO) error
+	DeleteShoppingListById(ctx context.Context, id string) error
+	CreateItem(ctx context.Context, dto *model.CreateItemDTO) error
+	GetItemById(ctx context.Context, id string) (*model.Item, error)
+	GetItems(ctx context.Context) ([]*model.Item, error)
+	UpdateItem(ctx context.Context, id string, dto *model.UpdateItemDTO) error
+	DeleteItemById(ctx context.Context, id string) error
+}
+
+func NewService(repository repository.Db) (Service, error) {
+	return &service{
+		repository: repository,
+	}, nil
+}
+
+func (s *service) CreateShoppingList(ctx context.Context, dto *model.CreateShoppingListDTO) error {
+	sl := model.NewShoppingList(dto)
 	err := s.repository.AddShoppingList(ctx, sl)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
@@ -26,7 +45,7 @@ func (s *Service) CreateShoppingList(ctx context.Context, dto model.CreateShoppi
 	return nil
 }
 
-func (s *Service) GetShoppingListById(ctx context.Context, id string) (*model.ShoppingList, error) {
+func (s *service) GetShoppingListById(ctx context.Context, id string) (*model.ShoppingList, error) {
 	sl, err := s.repository.GetSlById(ctx, id)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
@@ -38,7 +57,7 @@ func (s *Service) GetShoppingListById(ctx context.Context, id string) (*model.Sh
 	return sl, nil
 }
 
-func (s *Service) GetShoppingLists(ctx context.Context) ([]*model.ShoppingList, error) {
+func (s *service) GetShoppingLists(ctx context.Context) ([]*model.ShoppingList, error) {
 	sl, err := s.repository.GetSls(ctx)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
@@ -50,11 +69,11 @@ func (s *Service) GetShoppingLists(ctx context.Context) ([]*model.ShoppingList, 
 	return sl, nil
 }
 
-func (s *Service) UpdateShoppingList(ctx context.Context, id string, dto model.UpdateShoppingListDTO) error {
+func (s *service) UpdateShoppingList(ctx context.Context, id string, dto *model.UpdateShoppingListDTO) error {
 	if dto.Title == "" && len(dto.Items) == 0 && dto.UserId == "" {
 		return status.Errorf(codes.InvalidArgument, "nothing to update")
 	}
-	sl := model.UpdateShoppingList1(dto)
+	sl := model.UpdateShoppingList(dto)
 	err := s.repository.UpdateSl(ctx, id, sl)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
@@ -66,8 +85,24 @@ func (s *Service) UpdateShoppingList(ctx context.Context, id string, dto model.U
 	return nil
 }
 
-func (s *Service) CreateItem(ctx context.Context, dto model.CreateItemDTO) error {
-	i := model.NewItem1(dto)
+func (s *service) DeleteShoppingListById(ctx context.Context, id string) error {
+	_, err := s.repository.GetSlById(ctx, id)
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return status.Errorf(codes.Internal, err.Error())
+		}
+	}
+	err = s.repository.DeleteSlById(ctx, id)
+	if err != nil {
+		return status.Errorf(codes.Internal, err.Error())
+	}
+	return nil
+}
+
+func (s *service) CreateItem(ctx context.Context, dto *model.CreateItemDTO) error {
+	i := model.NewItem(dto)
 	err := s.repository.AddItem(ctx, i)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
@@ -79,7 +114,7 @@ func (s *Service) CreateItem(ctx context.Context, dto model.CreateItemDTO) error
 	return nil
 }
 
-func (s *Service) GetItemById(ctx context.Context, id string) (*model.Item, error) {
+func (s *service) GetItemById(ctx context.Context, id string) (*model.Item, error) {
 	i, err := s.repository.GetItemById(ctx, id)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
@@ -91,7 +126,7 @@ func (s *Service) GetItemById(ctx context.Context, id string) (*model.Item, erro
 	return i, nil
 }
 
-func (s *Service) GetItems(ctx context.Context) ([]*model.Item, error) {
+func (s *service) GetItems(ctx context.Context) ([]*model.Item, error) {
 	i, err := s.repository.GetItems(ctx)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
@@ -103,11 +138,11 @@ func (s *Service) GetItems(ctx context.Context) ([]*model.Item, error) {
 	return i, nil
 }
 
-func (s *Service) UpdateItem(ctx context.Context, id string, dto model.UpdateItemDTO) error {
+func (s *service) UpdateItem(ctx context.Context, id string, dto *model.UpdateItemDTO) error {
 	if dto.Title == "" && dto.Comment == "" && dto.UserId == "" {
 		return status.Errorf(codes.InvalidArgument, "nothing to update")
 	}
-	i := model.UpdateItem1(dto)
+	i := model.UpdateItem(dto)
 	err := s.repository.UpdateItem(ctx, id, i)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
@@ -119,15 +154,18 @@ func (s *Service) UpdateItem(ctx context.Context, id string, dto model.UpdateIte
 	return nil
 }
 
-//func (s *Service) UpdateItem(ctx context.Context, id string, u UpdateItemBody) error {
-//	_, err := s.repository.FindItem(ctx, id)
-//	if err != nil {
-//		return status.Errorf(codes.NotFound, err.Error())
-//	}
-//	u.UpdatedAt = time.Now().UTC()
-//	err = s.Repository.UpdateItem(ctx, id, u.String())
-//	if err != nil {
-//		return status.Errorf(codes.Internal, err.Error())
-//	}
-//	return nil
-//}
+func (s *service) DeleteItemById(ctx context.Context, id string) error {
+	_, err := s.repository.GetItemById(ctx, id)
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return status.Errorf(codes.Internal, err.Error())
+		}
+	}
+	err = s.repository.DeleteItemById(ctx, id)
+	if err != nil {
+		return status.Errorf(codes.Internal, err.Error())
+	}
+	return nil
+}
