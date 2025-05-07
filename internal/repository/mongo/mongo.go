@@ -27,6 +27,7 @@ func (m *MongoDb) AddItem(ctx context.Context, item *model.Item) error {
 		log.Println(err)
 		return err
 	}
+	log.Println("Inserted item: ", item.String())
 	return nil
 }
 
@@ -36,6 +37,7 @@ func (m *MongoDb) AddShoppingList(ctx context.Context, sl *model.ShoppingList) e
 		log.Println(err)
 		return err
 	}
+	log.Println("Inserted shopping list: ", sl.String())
 	return nil
 }
 
@@ -60,6 +62,7 @@ func ConnectRedisDb() (*redis.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Println("Connected to redis")
 	return client, nil
 }
 
@@ -89,6 +92,7 @@ func ConnectMongoDb() (*MongoDb, error) {
 	itemCollection := db.Collection("items")
 
 	userCollection := db.Collection("users")
+	log.Println("Connected to mongodb")
 
 	return &MongoDb{
 		ShoppingListCollection: shoppingListCollection,
@@ -109,6 +113,7 @@ func (m *MongoDb) GetItems(ctx context.Context) ([]*model.Item, error) {
 		log.Println(err)
 		return nil, err
 	}
+	log.Println("Get items: ", ls)
 	return ls, nil
 }
 
@@ -127,6 +132,7 @@ func (m *MongoDb) GetItemById(ctx context.Context, id string) (*model.Item, erro
 	if len(ls) == 0 {
 		return nil, errors.New("NOT FOUND")
 	}
+	log.Println("Get item: ", ls[0])
 	return ls[0], nil
 }
 
@@ -150,6 +156,7 @@ func (m *MongoDb) DeleteItemById(ctx context.Context, id string) error {
 		log.Println(err)
 		return err
 	}
+	log.Println("Delete item: ", ls[0])
 	return nil
 }
 
@@ -165,6 +172,7 @@ func (m *MongoDb) GetSls(ctx context.Context) ([]*model.ShoppingList, error) {
 		log.Println(err)
 		return nil, err
 	}
+	log.Println("Get shopping lists: ", ls)
 	return ls, nil
 }
 
@@ -183,6 +191,7 @@ func (m *MongoDb) GetSlById(ctx context.Context, id string) (*model.ShoppingList
 	if len(ls) == 0 {
 		return nil, errors.New("NOT FOUND")
 	}
+	log.Println("Get shopping list: ", ls[0])
 	return ls[0], nil
 }
 
@@ -206,6 +215,7 @@ func (m *MongoDb) DeleteSlById(ctx context.Context, id string) error {
 		log.Println(err)
 		return err
 	}
+	log.Println("Delete shopping list: ", ls[0])
 	return nil
 }
 
@@ -232,6 +242,7 @@ func (m *MongoDb) UpdateSl(ctx context.Context, id string, sl *model.ShoppingLis
 		log.Println(err)
 		return err
 	}
+	log.Println("Update shopping list: ", ls[0])
 	return nil
 }
 
@@ -276,6 +287,7 @@ func (m *MongoDb) UpdateItem(ctx context.Context, id string, item *model.Item) e
 		log.Println(err)
 		return err
 	}
+	log.Println("Update item: ", it[0])
 	return nil
 }
 
@@ -287,6 +299,7 @@ func (m *MongoDb) Registration(ctx context.Context, name, password string) (*mod
 		log.Println(err)
 		return nil, err
 	}
+	log.Println("Inserted user: ", user.Name)
 	return user, nil
 }
 
@@ -325,5 +338,6 @@ func (m *MongoDb) Login(ctx context.Context, user *model.User) (string, error) {
 			return tokenString, nil
 		}
 	}
+	log.Println("Login user: ", user.Name)
 	return "", errors.New("NOT FOUND")
 }
