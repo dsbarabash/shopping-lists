@@ -8,11 +8,21 @@ import (
 )
 
 func main() {
-	repository.FillSlices()
+	MongoDb, err := repository.ConnectMongoDb()
+	if err != nil {
+		log.Fatal(err)
+	}
+	RedisDB, err := repository.ConnectRedisDb()
+	if err != nil {
+		log.Fatal(err)
+	}
+	logWriter := repository.NewLogWriter(RedisDB)
+	log.SetOutput(logWriter)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	newApp, err := app.NewService(ctx)
+	newApp, err := app.NewService(ctx, MongoDb)
 	if err != nil {
 		log.Fatal(err)
 	}

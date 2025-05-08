@@ -11,17 +11,27 @@ import (
 )
 
 func main() {
+	MongoDb, err := repository.ConnectMongoDb()
+	if err != nil {
+		log.Fatal(err)
+	}
+	RedisDB, err := repository.ConnectRedisDb()
+	if err != nil {
+		log.Fatal(err)
+	}
+	logWriter := repository.NewLogWriter(RedisDB)
+	log.SetOutput(logWriter)
+
 	lis, err := net.Listen("tcp", ":5001")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
-	repository.FillSlices()
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(
 			handler.LoggingInterceptor,
 		),
 	)
-	shopping_list_api.RegisterShoppingListServiceServer(s, &handler.Server{})
+	shopping_list_api.RegisterShoppingListServiceServer(s, &handler.GrpcServer{MongoDb: MongoDb})
 
 	reflection.Register(s)
 

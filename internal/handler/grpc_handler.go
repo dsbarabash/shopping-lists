@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"github.com/dsbarabash/shopping-lists/internal/model"
 	"github.com/dsbarabash/shopping-lists/internal/proto_api/pkg/grpc/v1/shopping_list_api"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
@@ -16,11 +17,12 @@ import (
 	"time"
 )
 
-type Server struct {
+type GrpcServer struct {
 	shopping_list_api.ShoppingListServiceServer
+	MongoDb *repository.MongoDb
 }
 
-func (s *Server) CreateShoppingList(
+func (s *GrpcServer) CreateShoppingList(
 	ctx context.Context,
 	req *shopping_list_api.CreateShoppingListRequest,
 ) (*shopping_list_api.CreateShoppingListResponse, error) {
@@ -30,20 +32,24 @@ func (s *Server) CreateShoppingList(
 	if req.UserId == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "UserId не должен быть пустым")
 	}
-	iID, err := uuid.NewUUID()
+	ID, err := uuid.NewUUID()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "%s", err)
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
 	}
 	sl := &model.ShoppingList{
-		Id:     iID.String(),
+		Id:     ID.String(),
 		Title:  req.Title,
 		UserId: req.UserId,
 		Items:  req.Items,
 	}
-	repository.ShoppingList.Add(sl)
+	s.MongoDb.AddShoppingList(ctx, sl)
 	return &shopping_list_api.CreateShoppingListResponse{
 		ShoppingList: &shopping_list_api.ShoppingList{
-			Id:     iID.String(),
+			Id:     ID.String(),
 			Title:  req.Title,
 			UserId: req.UserId,
 			//CreatedAt:       time.Now(),
@@ -54,78 +60,90 @@ func (s *Server) CreateShoppingList(
 
 }
 
-func (s *Server) UpdateShoppingList(
+func (s *GrpcServer) UpdateShoppingList(
 	ctx context.Context,
 	req *shopping_list_api.UpdateShoppingListRequest,
 ) (*shopping_list_api.UpdateShoppingListResponse, error) {
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	for _, i := range repository.ShoppingList.Store {
-		if i.Id == req.GetId() {
-			i.Title = req.Title
-			i.UserId = req.UserId
-			i.UpdatedAt = time.Now()
-			i.Items = req.Items
-
-			repository.ItemList.SaveSliceToFile(repository.ItemList.Store)
-
-			return &shopping_list_api.UpdateShoppingListResponse{
-				ShoppingList: &shopping_list_api.ShoppingList{
-					Id:     i.Id,
-					Title:  i.Title,
-					UserId: i.UserId,
-					Items:  i.Items,
-				},
-			}, nil
+	sl := model.UpdateShoppingListRequest{
+		Title:  req.GetTitle(),
+		UserId: req.GetUserId(),
+		Items:  req.Items,
+	}
+	_, err := s.MongoDb.UpdateSl(ctx, req.GetId(), sl)
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 	}
-	return nil, status.Errorf(codes.NotFound, "Запись не найдена")
+	return &shopping_list_api.UpdateShoppingListResponse{
+		ShoppingList: &shopping_list_api.ShoppingList{
+			Id:     req.Id,
+			Title:  req.Title,
+			UserId: req.UserId,
+			Items:  req.Items,
+		},
+	}, nil
 }
 
-func (s *Server) DeleteShoppingList(
+func (s *GrpcServer) DeleteShoppingList(
 	ctx context.Context,
 	req *shopping_list_api.DeleteShoppingListRequest,
 ) (*shopping_list_api.DeleteShoppingListResponse, error) {
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-
-	for idx, sl := range repository.ShoppingList.Store {
-		if sl.Id == req.GetId() {
-			copy(repository.ShoppingList.Store[idx:], repository.ShoppingList.Store[idx+1:])
-			repository.ShoppingList.Store = repository.ShoppingList.Store[:len(repository.ShoppingList.Store)-1]
-			repository.ShoppingList.SaveSliceToFile(repository.ShoppingList.Store)
-			return nil, nil
+	_, err := s.MongoDb.DeleteSlById(ctx, req.GetId())
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 	}
-	return nil, status.Errorf(codes.NotFound, "Запись не найдена")
+	return nil, nil
 }
-func (s *Server) GetShoppingList(
+func (s *GrpcServer) GetShoppingList(
 	ctx context.Context,
 	req *shopping_list_api.GetShoppingListRequest,
 ) (*shopping_list_api.GetShoppingListResponse, error) {
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	for _, i := range repository.ShoppingList.Store {
-		if i.Id == req.GetId() {
-			return &shopping_list_api.GetShoppingListResponse{
-				ShoppingList: &shopping_list_api.ShoppingList{
-					Id:     i.Id,
-					Title:  i.Title,
-					UserId: i.UserId,
-					Items:  i.Items,
-				},
-			}, nil
+	sl, err := s.MongoDb.GetSlById(ctx, req.GetId())
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 	}
-	return nil, status.Errorf(codes.NotFound, "Запись не найдена")
+	return &shopping_list_api.GetShoppingListResponse{
+		ShoppingList: &shopping_list_api.ShoppingList{
+			Id:     sl[0].Id,
+			Title:  sl[0].Title,
+			UserId: sl[0].UserId,
+			Items:  sl[0].Items,
+		},
+	}, nil
+
 }
 
-func (s *Server) GetShoppingLists(ctx context.Context, _ *emptypb.Empty) (*shopping_list_api.GetShoppingListsResponse, error) {
+func (s *GrpcServer) GetShoppingLists(ctx context.Context, _ *emptypb.Empty) (*shopping_list_api.GetShoppingListsResponse, error) {
 	var sl []*shopping_list_api.ShoppingList
-	for _, i := range repository.ShoppingList.Store {
+	list, err := s.MongoDb.GetSls(ctx)
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+	}
+	for _, i := range list {
 		sl = append(sl, &shopping_list_api.ShoppingList{
 			Id:     i.Id,
 			Title:  i.Title,
@@ -138,7 +156,7 @@ func (s *Server) GetShoppingLists(ctx context.Context, _ *emptypb.Empty) (*shopp
 	}, nil
 }
 
-func (s *Server) CreateItem(
+func (s *GrpcServer) CreateItem(
 	ctx context.Context,
 	req *shopping_list_api.CreateItemRequest,
 ) (*shopping_list_api.CreateItemResponse, error) {
@@ -155,6 +173,7 @@ func (s *Server) CreateItem(
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "%s", err)
 	}
+
 	item := &model.Item{
 		Id:             iID.String(),
 		Title:          req.Title,
@@ -163,7 +182,14 @@ func (s *Server) CreateItem(
 		UserId:         req.UserId,
 		ShoppingListId: req.ShoppingListId,
 	}
-	repository.ItemList.Add(item)
+	err = s.MongoDb.AddItem(ctx, item)
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+	}
 	return &shopping_list_api.CreateItemResponse{
 		Item: &shopping_list_api.Item{
 			Id:      iID.String(),
@@ -179,84 +205,94 @@ func (s *Server) CreateItem(
 
 }
 
-func (s *Server) UpdateItem(
+func (s *GrpcServer) UpdateItem(
 	ctx context.Context,
 	req *shopping_list_api.UpdateItemRequest,
 ) (*shopping_list_api.UpdateItemResponse, error) {
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-	for _, i := range repository.ItemList.Store {
-		if i.Id == req.GetId() {
-			i.Title = req.Title
-			i.Comment = req.Comment
-			i.IsDone = false
-			i.UserId = req.UserId
-			i.UpdatedAt = time.Now()
-			i.ShoppingListId = req.ShoppingListId
-			repository.ItemList.SaveSliceToFile(repository.ItemList.Store)
-
-			return &shopping_list_api.UpdateItemResponse{
-				Item: &shopping_list_api.Item{
-					Id:             i.Id,
-					Title:          i.Title,
-					Comment:        i.Comment,
-					IsDone:         i.IsDone,
-					UserId:         i.UserId,
-					ShoppingListId: i.ShoppingListId,
-				},
-			}, nil
+	item := model.UpdateItemRequest{
+		Title:          req.Title,
+		Comment:        req.Comment,
+		IsDone:         false,
+		UserId:         req.UserId,
+		ShoppingListId: req.ShoppingListId,
+	}
+	item.UpdatedAt = time.Now().UTC()
+	_, err := s.MongoDb.UpdateItem(ctx, req.GetId(), item)
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 	}
-	return nil, status.Errorf(codes.NotFound, "Запись не найдена")
+	return &shopping_list_api.UpdateItemResponse{
+		Item: &shopping_list_api.Item{
+			Id:             req.Id,
+			Title:          req.Title,
+			Comment:        req.Comment,
+			IsDone:         false,
+			UserId:         req.UserId,
+			ShoppingListId: req.ShoppingListId,
+		},
+	}, nil
+
 }
 
-func (s *Server) DeleteItem(
+func (s *GrpcServer) DeleteItem(
 	ctx context.Context,
 	req *shopping_list_api.DeleteItemRequest,
 ) (*shopping_list_api.DeleteItemResponse, error) {
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-
-	for idx, i := range repository.ItemList.Store {
-		if i.Id == req.GetId() {
-			copy(repository.ItemList.Store[idx:], repository.ItemList.Store[idx+1:])
-			repository.ItemList.Store = repository.ItemList.Store[:len(repository.ItemList.Store)-1]
-			repository.ItemList.SaveSliceToFile(repository.ItemList.Store)
-			return nil, nil
+	_, err := s.MongoDb.DeleteItemById(ctx, req.GetId())
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 	}
-	return nil, status.Errorf(codes.NotFound, "Запись не найдена")
+	return nil, nil
 }
-func (s *Server) GetItem(
+
+func (s *GrpcServer) GetItem(
 	ctx context.Context,
 	req *shopping_list_api.GetItemRequest,
 ) (*shopping_list_api.GetItemResponse, error) {
 	if req.GetId() <= "" {
 		return nil, status.Errorf(codes.InvalidArgument, "id не должен быть пустым")
 	}
-
-	for _, i := range repository.ItemList.Store {
-		if i.Id == req.GetId() {
-			return &shopping_list_api.GetItemResponse{
-				Item: &shopping_list_api.Item{
-					Id:             i.Id,
-					Title:          i.Title,
-					Comment:        i.Comment,
-					IsDone:         i.IsDone,
-					UserId:         i.UserId,
-					ShoppingListId: i.ShoppingListId,
-				},
-			}, nil
-		}
+	item, err := s.MongoDb.GetItemById(ctx, req.GetId())
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
-	return nil, status.Errorf(codes.NotFound, "Запись не найдена")
+	return &shopping_list_api.GetItemResponse{
+		Item: &shopping_list_api.Item{
+			Id:             item[0].Id,
+			Title:          item[0].Title,
+			Comment:        item[0].Comment,
+			IsDone:         item[0].IsDone,
+			UserId:         item[0].UserId,
+			ShoppingListId: item[0].ShoppingListId,
+		},
+	}, nil
 }
 
-func (s *Server) GetItems(ctx context.Context, _ *emptypb.Empty) (*shopping_list_api.GetItemsResponse, error) {
+func (s *GrpcServer) GetItems(ctx context.Context, _ *emptypb.Empty) (*shopping_list_api.GetItemsResponse, error) {
 	var items []*shopping_list_api.Item
-	for _, i := range repository.ItemList.Store {
+	list, err := s.MongoDb.GetItems(ctx)
+	if err != nil {
+		if errors.Is(err, errors.New("NOT FOUND")) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+	}
+	for _, i := range list {
 		items = append(items, &shopping_list_api.Item{
 			Id:             i.Id,
 			Title:          i.Title,

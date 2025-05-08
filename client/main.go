@@ -19,6 +19,12 @@ func main() {
 
 	client := shopping_list_api.NewShoppingListServiceClient(conn)
 
+	res3, err := client.CreateItem(context.Background(), &shopping_list_api.CreateItemRequest{Title: "Test_title1", UserId: "343434", ShoppingListId: "567567567"})
+	if err != nil {
+		log.Fatalf("error get request: %s", err.Error())
+	}
+	fmt.Println(res3.String())
+
 	res2, err := client.GetItems(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		log.Fatalf("error get request: %s", err.Error())
@@ -29,14 +35,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error get request: %s", err.Error())
 	}
-
 	fmt.Println(res.String())
-
-	res3, err := client.CreateItem(context.Background(), &shopping_list_api.CreateItemRequest{Title: "Test_title1", UserId: "123123", ShoppingListId: "567567567"})
-	if err != nil {
-		log.Fatalf("error get request: %s", err.Error())
-	}
-	fmt.Println(res3.String())
 
 	res4, err := client.UpdateItem(context.Background(), &shopping_list_api.UpdateItemRequest{Id: res2.Items[0].Id, Title: "Test_title3", UserId: "65656", ShoppingListId: "8989989"})
 	if err != nil {
@@ -50,6 +49,12 @@ func main() {
 	}
 	fmt.Println(res5.String())
 
+	res8, err := client.CreateShoppingList(context.Background(), &shopping_list_api.CreateShoppingListRequest{Title: "Test_title1", UserId: "0000", Items: []string{"234", "567"}})
+	if err != nil {
+		log.Fatalf("error get request: %s", err.Error())
+	}
+	fmt.Println(res8.String())
+
 	res7, err := client.GetShoppingLists(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		log.Fatalf("error get request: %s", err.Error())
@@ -62,12 +67,6 @@ func main() {
 	}
 
 	fmt.Println(res6.String())
-
-	res8, err := client.CreateShoppingList(context.Background(), &shopping_list_api.CreateShoppingListRequest{Title: "Test_title1", UserId: "0000", Items: []string{"234", "567"}})
-	if err != nil {
-		log.Fatalf("error get request: %s", err.Error())
-	}
-	fmt.Println(res8.String())
 
 	res9, err := client.UpdateShoppingList(context.Background(), &shopping_list_api.UpdateShoppingListRequest{Id: res7.ShoppingList[0].Id, Title: "Test_title3", UserId: "123123", Items: []string{"234", "567", "875"}})
 	if err != nil {

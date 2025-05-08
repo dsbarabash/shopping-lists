@@ -64,7 +64,7 @@ type Item struct {
 	IsDone         bool      `json:"is_done"`
 	UserId         string    `json:"user_id"`
 	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updatedA_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 	ShoppingListId string    `json:"shopping_list_id"`
 }
 
@@ -114,16 +114,18 @@ type CreateShoppingListRequest struct {
 }
 
 type UpdateShoppingListRequest struct {
-	Title  string   `json:"title"`
-	UserId string   `json:"user_id"`
-	Items  []string `json:"items"`
-	State  State    `json:"state"`
+	Title     string    `json:"title"`
+	UserId    string    `json:"user_id"`
+	Items     []string  `json:"items"`
+	State     State     `json:"state"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type UpdateItemRequest struct {
-	Title          string `json:"title"`
-	Comment        string `json:"comment"`
-	IsDone         bool   `json:"is_done"`
-	UserId         string `json:"user_id"`
-	ShoppingListId string `json:"shopping_list_id"`
+	Title          string    `json:"title"`
+	Comment        string    `json:"comment"`
+	IsDone         bool      `json:"is_done"`
+	UserId         string    `json:"user_id"`
+	ShoppingListId string    `json:"shopping_list_id"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
