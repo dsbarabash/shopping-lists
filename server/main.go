@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/dsbarabash/shopping-lists/internal/handler"
+	grpc2 "github.com/dsbarabash/shopping-lists/internal/frontend/grpc"
 	"github.com/dsbarabash/shopping-lists/internal/proto_api/pkg/grpc/v1/shopping_list_api"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
@@ -32,10 +32,10 @@ func main() {
 	}
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(
-			handler.LoggingInterceptor,
+			grpc2.LoggingInterceptor,
 		),
 	)
-	shopping_list_api.RegisterShoppingListServiceServer(s, &handler.GrpcServer{MongoDb: MongoDb, Service: Service})
+	shopping_list_api.RegisterShoppingListServiceServer(s, &grpc2.GrpcServer{MongoDb: MongoDb, Service: Service})
 
 	reflection.Register(s)
 
