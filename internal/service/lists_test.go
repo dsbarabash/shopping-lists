@@ -12,6 +12,42 @@ import (
 	"testing"
 )
 
+func TestNewService(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockService := repository.NewMockDb(ctrl)
+	type args struct {
+		repository repository.Db
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    Service
+		wantErr bool
+	}{
+		{
+			"Valid",
+			args{mockService},
+			&service{
+				repository: mockService,
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewService(tt.args.repository)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewService() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewService() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_service_CreateItem(t *testing.T) {
 	type args struct {
 		ctx context.Context

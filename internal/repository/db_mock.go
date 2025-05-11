@@ -63,6 +63,20 @@ func (mr *MockDbMockRecorder) AddShoppingList(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddShoppingList", reflect.TypeOf((*MockDb)(nil).AddShoppingList), arg0, arg1)
 }
 
+// CreateUser mocks base method.
+func (m *MockDb) CreateUser(arg0 context.Context, arg1 *model.User) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUser", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateUser indicates an expected call of CreateUser.
+func (mr *MockDbMockRecorder) CreateUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockDb)(nil).CreateUser), arg0, arg1)
+}
+
 // DeleteItemById mocks base method.
 func (m *MockDb) DeleteItemById(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -164,21 +178,6 @@ func (m *MockDb) Login(arg0 context.Context, arg1 *model.User) (string, error) {
 func (mr *MockDbMockRecorder) Login(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockDb)(nil).Login), arg0, arg1)
-}
-
-// Registration mocks base method.
-func (m *MockDb) Registration(arg0 context.Context, arg1, arg2 string) (*model.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Registration", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*model.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Registration indicates an expected call of Registration.
-func (mr *MockDbMockRecorder) Registration(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Registration", reflect.TypeOf((*MockDb)(nil).Registration), arg0, arg1, arg2)
 }
 
 // UpdateItem mocks base method.
