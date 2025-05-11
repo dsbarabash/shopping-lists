@@ -19,7 +19,7 @@ type Db interface {
 	DeleteSlById(context.Context, string) error
 	UpdateSl(context.Context, string, *model.ShoppingList) error
 	UpdateItem(context.Context, string, *model.Item) error
-	Registration(context.Context, string, string) (*model.User, error)
+	CreateUser(context.Context, *model.User) error
 	Login(context.Context, *model.User) (string, error)
 }
 

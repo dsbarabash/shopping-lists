@@ -5,6 +5,7 @@ import (
 	"github.com/dsbarabash/shopping-lists/internal/app"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
+	"github.com/dsbarabash/shopping-lists/internal/service"
 	"log"
 )
 
@@ -22,8 +23,9 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	newApp, err := app.NewService(ctx, MongoDb)
+	Service, err := service.NewService(MongoDb)
+	UserService, err := service.NewUserService(MongoDb)
+	newApp, err := app.NewService(ctx, Service, UserService)
 	if err != nil {
 		log.Fatal(err)
 	}

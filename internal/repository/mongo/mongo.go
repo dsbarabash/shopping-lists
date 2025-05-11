@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/dsbarabash/shopping-lists/internal/config"
 	"github.com/dsbarabash/shopping-lists/internal/model"
+	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"time"
 )
 
 type MongoDb struct {
@@ -264,23 +266,32 @@ func (m *MongoDb) DeleteItemById(ctx context.Context, id string) error {
 	return nil
 }
 
-func (m *MongoDb) Registration(ctx context.Context, name, password string) (*model.User, error) {
-	var user *model.User
-	user = model.NewUser(name, password)
-	_, err := m.UserCollection.InsertOne(ctx, user)
+func (m *MongoDb) CreateUser(ctx context.Context, user *model.User) error {
+	users, err := m.UserCollection.Find(ctx, bson.D{primitive.E{Key: "name", Value: user.Name}})
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return err
+	}
+	var u []model.User
+	err = users.All(ctx, &u)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	if len(u) != 0 {
+		return errors.New("USER ALREADY EXISTS")
+	}
+	_, err = m.UserCollection.InsertOne(ctx, user)
+	if err != nil {
+		log.Println(err)
+		return err
 	}
 	log.Println("Inserted user: ", user.Name)
-	return user, nil
+	return nil
 }
 
 func (m *MongoDb) Login(ctx context.Context, user *model.User) (string, error) {
-	if user.State != 1 {
-		return "", errors.New("USER NOT ACTIVE")
-	}
-	users, err := m.UserCollection.Find(ctx, bson.D{primitive.E{Key: "id", Value: user.Id}})
+	users, err := m.UserCollection.Find(ctx, bson.D{primitive.E{Key: "name", Value: user.Name}})
 	if err != nil {
 		log.Println(err)
 		return "", err
@@ -292,17 +303,16 @@ func (m *MongoDb) Login(ctx context.Context, user *model.User) (string, error) {
 		return "", err
 	}
 	if len(u) == 0 {
-		return "", errors.New("NOT FOUND")
+		return "", repository.ErrNotFound
 	} else {
 		if u[0].State != 1 {
 			return "", errors.New("USER NOT ACTIVE")
 		} else if u[0].Password == user.Password && u[0].Name == user.Name {
 			secretKey := []byte(config.Cfg.Secret)
 			token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-				"id":       user.Id,
-				"name":     user.Name,
-				"password": user.Password,
-				"state":    1,
+				"id":   user.Id,
+				"name": user.Name,
+				"exp":  time.Now().Add(time.Hour * 24).Unix(), // Срок действия — 24 часа
 			})
 			tokenString, err := token.SignedString(secretKey)
 			if err != nil {
@@ -312,5 +322,5 @@ func (m *MongoDb) Login(ctx context.Context, user *model.User) (string, error) {
 		}
 	}
 	log.Println("Login user: ", user.Name)
-	return "", errors.New("NOT FOUND")
+	return "", repository.ErrNotFound
 }

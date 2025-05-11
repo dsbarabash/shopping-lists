@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/model"
-	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
 	"github.com/dsbarabash/shopping-lists/internal/service"
 	_ "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -15,8 +14,61 @@ import (
 )
 
 type RestServer struct {
-	MongoDb *mongo.MongoDb
-	Service service.Service
+	Service     service.Service
+	UserService service.UserService
+}
+
+// Registration
+// @Summary Регистрация
+// @Tags auths
+// @Accept			json
+// @Produce		json
+// @Param input body model.RegistrationUserRequest true "Модель которую принимает метод"
+// @Success 200 {string}  string "Registration successful"
+// @Failure 400 {string} string "Invalid request"
+// @Router /login [post]
+func (s *RestServer) Registration(w http.ResponseWriter, r *http.Request) {
+	var user model.CreateUserDTO
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+		return
+	}
+	err = json.Unmarshal(body, &user)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+		return
+	}
+	if user.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": "Username is empty"}`))
+		return
+	}
+	if user.Password == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"success": false, "error": "Password is empty"}`))
+		return
+	}
+
+	uID, err := uuid.NewUUID()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+		return
+	}
+	user.Id = uID.String()
+	user.State = 1
+	err = s.UserService.CreateUser(r.Context(), &user)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`{"success": true}`)))
+	return
 }
 
 // Login
@@ -52,56 +104,14 @@ func (s *RestServer) Login(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": "Password is empty"}`))
 		return
 	}
-
-	token, err := s.MongoDb.Login(r.Context(), &user)
+	token, err := s.UserService.Login(r.Context(), &user)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`{"success": true, "token": "%s"}`, token)))
-	return
-}
-
-// Registration
-// @Summary Регистрация
-// @Tags auths
-// @Accept			json
-// @Produce		json
-// @Param input body model.RegistrationUserRequest true "Модель которую принимает метод"
-// @Success 200 {string}  string "Registration successful"
-// @Failure 400 {string} string "Invalid request"
-// @Router /login [post]
-func (s *RestServer) Registration(w http.ResponseWriter, r *http.Request) {
-	var user model.User
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
-		return
-	}
-	err = json.Unmarshal(body, &user)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
-		return
-	}
-	if user.Name == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": "Username is empty"}`))
-		return
-	}
-	if user.Password == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"success": false, "error": "Password is empty"}`))
-		return
-	}
-	s.MongoDb.Registration(r.Context(), user.Name, user.Password)
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`{"success": true}`)))
 	return
 }
 

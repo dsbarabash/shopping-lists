@@ -1,9 +1,5 @@
 package model
 
-import (
-	"github.com/google/uuid"
-)
-
 type User struct {
 	Id       string `json:"id"`
 	Name     string `json:"name"`
@@ -11,14 +7,20 @@ type User struct {
 	State    State  `json:"state"`
 }
 
-func NewUser(name, password string) *User {
-	id := uuid.New()
+func NewUser(dto *CreateUserDTO) *User {
 	return &User{
-		Id:       id.String(),
-		Name:     name,
-		Password: password,
-		State:    1,
+		Id:       dto.Id,
+		Name:     dto.Name,
+		Password: dto.Password,
+		State:    dto.State,
 	}
+}
+
+type CreateUserDTO struct {
+	Id       string `json:"id,omitempty" bson:"id,omitempty"`
+	Name     string `json:"name,omitempty" bson:"name,omitempty"`
+	Password string `json:"password,omitempty" bson:"password,omitempty"`
+	State    State  `json:"state,omitempty" bson:"state,omitempty"`
 }
 
 type CreateUserRequest struct {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/config"
 	"github.com/dsbarabash/shopping-lists/internal/frontend/rest"
-	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
+	"github.com/dsbarabash/shopping-lists/internal/service"
 	"log"
 	"net/http"
 	"os"
@@ -20,10 +20,11 @@ type App struct {
 	server *rest.RestServer
 }
 
-func NewService(ctx context.Context, mongoDB *mongo.MongoDb) (*App, error) {
+func NewService(ctx context.Context, service service.Service, userService service.UserService) (*App, error) {
 	// Инит баз клиентов
 	c := &rest.RestServer{
-		MongoDb: mongoDB,
+		Service:     service,
+		UserService: userService,
 	}
 	return &App{
 		ctx:    ctx,
@@ -46,32 +47,32 @@ func (a *App) Start() error {
 	mux.HandleFunc("POST /api/item", func(w http.ResponseWriter, r *http.Request) {
 		rest.UserIdentity(w, r, a.server.AddItem)
 	})
-	mux.HandleFunc("POST /api/shopping_list", func(w http.ResponseWriter, r *http.Request) {
-		rest.UserIdentity(w, r, a.server.AddShoppingList)
+	mux.HandleFunc("GET /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
+		rest.UserIdentity(w, r, a.server.GetItemById)
 	})
 	mux.HandleFunc("GET /api/items", func(w http.ResponseWriter, r *http.Request) {
 		rest.UserIdentity(w, r, a.server.GetItems)
 	})
-	mux.HandleFunc("GET /api/shopping_lists", func(w http.ResponseWriter, r *http.Request) {
-		rest.UserIdentity(w, r, a.server.GetShoppingLists)
-	})
-	mux.HandleFunc("GET /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
-		rest.UserIdentity(w, r, a.server.GetItemById)
-	})
-	mux.HandleFunc("GET /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
-		rest.UserIdentity(w, r, a.server.GetShoppingListById)
+	mux.HandleFunc("PUT /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
+		rest.UserIdentity(w, r, a.server.UpdateItemById)
 	})
 	mux.HandleFunc("DELETE /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
 		rest.UserIdentity(w, r, a.server.DeleteItemById)
 	})
-	mux.HandleFunc("DELETE /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
-		rest.UserIdentity(w, r, a.server.DeleteShoppingListById)
+	mux.HandleFunc("POST /api/shopping_list", func(w http.ResponseWriter, r *http.Request) {
+		rest.UserIdentity(w, r, a.server.AddShoppingList)
 	})
-	mux.HandleFunc("PUT /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
-		rest.UserIdentity(w, r, a.server.UpdateItemById)
+	mux.HandleFunc("GET /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
+		rest.UserIdentity(w, r, a.server.GetShoppingListById)
+	})
+	mux.HandleFunc("GET /api/shopping_lists", func(w http.ResponseWriter, r *http.Request) {
+		rest.UserIdentity(w, r, a.server.GetShoppingLists)
 	})
 	mux.HandleFunc("PUT /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
 		rest.UserIdentity(w, r, a.server.UpdateShoppingListById)
+	})
+	mux.HandleFunc("DELETE /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
+		rest.UserIdentity(w, r, a.server.DeleteShoppingListById)
 	})
 
 	serverHTTP := &http.Server{
