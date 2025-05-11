@@ -121,7 +121,7 @@ func (s *RestServer) AddShoppingList(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	var sl model.ShoppingList
+	var sl model.CreateShoppingListDTO
 	err = json.Unmarshal(body, &sl)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -147,7 +147,7 @@ func (s *RestServer) AddShoppingList(w http.ResponseWriter, r *http.Request) {
 	sl.UpdatedAt = timestamppb.Now()
 	sl.Items = make([]string, 0)
 	sl.State = 1
-	err = s.MongoDb.AddShoppingList(r.Context(), &sl)
+	err = s.Service.CreateShoppingList(r.Context(), &sl)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
 			w.WriteHeader(http.StatusNotFound)
@@ -174,7 +174,7 @@ func (s *RestServer) AddShoppingList(w http.ResponseWriter, r *http.Request) {
 // @Router /api/shopping_list/{id} [get]
 func (s *RestServer) GetShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	sl, err := s.MongoDb.GetSlById(r.Context(), id)
+	sl, err := s.Service.GetShoppingListById(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
 			w.WriteHeader(http.StatusNotFound)
@@ -211,7 +211,7 @@ func (s *RestServer) GetShoppingListById(w http.ResponseWriter, r *http.Request)
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/shopping_lists [get]
 func (s *RestServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
-	list, err := s.MongoDb.GetSls(r.Context())
+	list, err := s.Service.GetShoppingLists(r.Context())
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
 			w.WriteHeader(http.StatusNotFound)
@@ -256,7 +256,7 @@ func (s *RestServer) UpdateShoppingListById(w http.ResponseWriter, r *http.Reque
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	var sl *model.ShoppingList
+	var sl *model.UpdateShoppingListDTO
 	err = json.Unmarshal(body, &sl)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -264,7 +264,7 @@ func (s *RestServer) UpdateShoppingListById(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	sl.UpdatedAt = timestamppb.Now()
-	err = s.MongoDb.UpdateSl(r.Context(), id, sl)
+	err = s.Service.UpdateShoppingList(r.Context(), id, sl)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
 			w.WriteHeader(http.StatusNotFound)
@@ -290,7 +290,7 @@ func (s *RestServer) UpdateShoppingListById(w http.ResponseWriter, r *http.Reque
 // @Router /api/shopping_list/{id} [delete]
 func (s *RestServer) DeleteShoppingListById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	err := s.MongoDb.DeleteSlById(r.Context(), id)
+	err := s.Service.DeleteShoppingListById(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
 			w.WriteHeader(http.StatusNotFound)
@@ -322,7 +322,7 @@ func (s *RestServer) AddItem(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	var it model.Item
+	var it model.CreateItemDTO
 	err = json.Unmarshal(body, &it)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -352,7 +352,7 @@ func (s *RestServer) AddItem(w http.ResponseWriter, r *http.Request) {
 	it.CreatedAt = timestamppb.Now()
 	it.UpdatedAt = timestamppb.Now()
 	it.IsDone = false
-	err = s.MongoDb.AddItem(r.Context(), &it)
+	err = s.Service.CreateItem(r.Context(), &it)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
 			w.WriteHeader(http.StatusNotFound)
@@ -379,7 +379,7 @@ func (s *RestServer) AddItem(w http.ResponseWriter, r *http.Request) {
 // @Router /api/item/{id} [get]
 func (s *RestServer) GetItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	item, err := s.MongoDb.GetItemById(r.Context(), id)
+	item, err := s.Service.GetItemById(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
 			w.WriteHeader(http.StatusNotFound)
@@ -416,7 +416,7 @@ func (s *RestServer) GetItemById(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "Invalid request"
 // @Router /api/items [get]
 func (s *RestServer) GetItems(w http.ResponseWriter, r *http.Request) {
-	list, err := s.MongoDb.GetItems(r.Context())
+	list, err := s.Service.GetItems(r.Context())
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
 			w.WriteHeader(http.StatusNotFound)
@@ -461,7 +461,7 @@ func (s *RestServer) UpdateItemById(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	var item *model.Item
+	var item *model.UpdateItemDTO
 	err = json.Unmarshal(body, &item)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -469,7 +469,7 @@ func (s *RestServer) UpdateItemById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	item.UpdatedAt = timestamppb.Now()
-	err = s.MongoDb.UpdateItem(r.Context(), id, item)
+	err = s.Service.UpdateItem(r.Context(), id, item)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
 			w.WriteHeader(http.StatusNotFound)
@@ -495,7 +495,7 @@ func (s *RestServer) UpdateItemById(w http.ResponseWriter, r *http.Request) {
 // @Router /api/item/{id} [delete]
 func (s *RestServer) DeleteItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	err := s.MongoDb.DeleteItemById(r.Context(), id)
+	err := s.Service.DeleteItemById(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
 			w.WriteHeader(http.StatusNotFound)
