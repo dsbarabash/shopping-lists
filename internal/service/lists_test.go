@@ -54,14 +54,6 @@ func Test_service_CreateItem(t *testing.T) {
 			},
 		},
 		{
-			"InValidErrNotFound",
-			args{context.Background(), createItemDTO},
-			true,
-			func(mockService *repository.MockDb) {
-				mockService.EXPECT().AddItem(context.Background(), item).Return(repository.ErrNotFound).Times(1)
-			},
-		},
-		{
 			"InValidErrInternal",
 			args{context.Background(), createItemDTO},
 			true,
@@ -452,14 +444,6 @@ func Test_service_CreateShoppingList(t *testing.T) {
 			false,
 			func(mockService *repository.MockDb) {
 				mockService.EXPECT().AddShoppingList(context.Background(), sl).Return(nil).Times(1)
-			},
-		},
-		{
-			"InvalidErrNotFound",
-			args{context.Background(), createSLDTO},
-			true,
-			func(mockService *repository.MockDb) {
-				mockService.EXPECT().AddShoppingList(context.Background(), sl).Return(repository.ErrNotFound).Times(1)
 			},
 		},
 		{

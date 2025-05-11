@@ -36,11 +36,7 @@ func (s *service) CreateShoppingList(ctx context.Context, dto *model.CreateShopp
 	sl := model.NewShoppingList(dto)
 	err := s.repository.AddShoppingList(ctx, sl)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			return status.Errorf(codes.NotFound, err.Error())
-		} else {
-			return status.Errorf(codes.Internal, err.Error())
-		}
+		return status.Errorf(codes.Internal, err.Error())
 	}
 	return nil
 }
@@ -113,11 +109,7 @@ func (s *service) CreateItem(ctx context.Context, dto *model.CreateItemDTO) erro
 	i := model.NewItem(dto)
 	err := s.repository.AddItem(ctx, i)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			return status.Errorf(codes.NotFound, err.Error())
-		} else {
-			return status.Errorf(codes.Internal, err.Error())
-		}
+		return status.Errorf(codes.Internal, err.Error())
 	}
 	return nil
 }
