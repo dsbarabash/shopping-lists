@@ -1,5 +1,5 @@
 syntax = "proto3";
-// C:\Projects\Go\protoc-30.2-win64\bin\protoc --go_out=. --go-grpc_out=. api/grpc/v1/shopping_list.proto
+
 package shopping_list.v1;
 
 option go_package = "pkg/grpc/v1/shopping_list_api";
