@@ -2,8 +2,11 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"github.com/dsbarabash/shopping-lists/internal/model"
 )
+
+//go:generate mockgen -source=db.go -destination=db_mock.go -package=repository
 
 type Db interface {
 	AddItem(context.Context, *model.Item) error
@@ -19,3 +22,5 @@ type Db interface {
 	Registration(context.Context, string, string) (*model.User, error)
 	Login(context.Context, *model.User) (string, error)
 }
+
+var ErrNotFound = errors.New("NOT FOUND")

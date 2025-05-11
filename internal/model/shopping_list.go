@@ -20,10 +20,10 @@ func NewShoppingList(dto *CreateShoppingListDTO) *ShoppingList {
 		Id:        dto.Id,
 		Title:     dto.Title,
 		UserId:    dto.UserId,
-		CreatedAt: timestamppb.Now(),
-		UpdatedAt: timestamppb.Now(),
-		Items:     make([]string, 0),
-		State:     1,
+		CreatedAt: dto.CreatedAt,
+		UpdatedAt: dto.UpdatedAt,
+		Items:     dto.Items,
+		State:     dto.State,
 	}
 }
 
@@ -33,7 +33,7 @@ func UpdateShoppingList(dto *UpdateShoppingListDTO) *ShoppingList {
 		Title:     dto.Title,
 		UserId:    dto.UserId,
 		CreatedAt: dto.CreatedAt,
-		UpdatedAt: timestamppb.Now(),
+		UpdatedAt: dto.UpdatedAt,
 		Items:     dto.Items,
 		State:     dto.State,
 	}
@@ -103,8 +103,8 @@ func NewItem(dto *CreateItemDTO) *Item {
 		Comment:        dto.Comment,
 		IsDone:         dto.IsDone,
 		UserId:         dto.UserId,
-		CreatedAt:      timestamppb.Now(),
-		UpdatedAt:      timestamppb.Now(),
+		CreatedAt:      dto.CreatedAt,
+		UpdatedAt:      dto.UpdatedAt,
 		ShoppingListId: dto.ShoppingListId,
 	}
 }
@@ -117,7 +117,7 @@ func UpdateItem(dto *UpdateItemDTO) *Item {
 		IsDone:         dto.IsDone,
 		UserId:         dto.UserId,
 		CreatedAt:      dto.CreatedAt,
-		UpdatedAt:      timestamppb.Now(),
+		UpdatedAt:      dto.UpdatedAt,
 		ShoppingListId: dto.ShoppingListId,
 	}
 }

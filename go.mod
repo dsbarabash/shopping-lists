@@ -5,6 +5,7 @@ go 1.22.11
 require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.6.0
 	github.com/swaggo/swag v1.16.4
 	go.mongodb.org/mongo-driver v1.17.3

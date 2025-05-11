@@ -12,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"os"
 )
 
 type MongoDb struct {
@@ -39,14 +38,6 @@ func (m *MongoDb) AddShoppingList(ctx context.Context, sl *model.ShoppingList) e
 	}
 	log.Println("Inserted shopping list: ", sl.String())
 	return nil
-}
-
-func ReadJson(fileName string) ([]byte, error) {
-	data, err := os.ReadFile(fileName)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
 }
 
 func ConnectRedisDb() (*redis.Client, error) {

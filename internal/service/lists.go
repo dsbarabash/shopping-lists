@@ -36,7 +36,7 @@ func (s *service) CreateShoppingList(ctx context.Context, dto *model.CreateShopp
 	sl := model.NewShoppingList(dto)
 	err := s.repository.AddShoppingList(ctx, sl)
 	if err != nil {
-		if errors.Is(err, errors.New("NOT FOUND")) {
+		if errors.Is(err, repository.ErrNotFound) {
 			return status.Errorf(codes.NotFound, err.Error())
 		} else {
 			return status.Errorf(codes.Internal, err.Error())
@@ -48,7 +48,7 @@ func (s *service) CreateShoppingList(ctx context.Context, dto *model.CreateShopp
 func (s *service) GetShoppingListById(ctx context.Context, id string) (*model.ShoppingList, error) {
 	sl, err := s.repository.GetSlById(ctx, id)
 	if err != nil {
-		if errors.Is(err, errors.New("NOT FOUND")) {
+		if errors.Is(err, repository.ErrNotFound) {
 			return sl, status.Errorf(codes.NotFound, err.Error())
 		} else {
 			return sl, status.Errorf(codes.Internal, err.Error())
@@ -73,10 +73,18 @@ func (s *service) UpdateShoppingList(ctx context.Context, id string, dto *model.
 	if dto.Title == "" && len(dto.Items) == 0 && dto.UserId == "" {
 		return status.Errorf(codes.InvalidArgument, "nothing to update")
 	}
-	sl := model.UpdateShoppingList(dto)
-	err := s.repository.UpdateSl(ctx, id, sl)
+	_, err := s.repository.GetSlById(ctx, id)
 	if err != nil {
-		if errors.Is(err, errors.New("NOT FOUND")) {
+		if errors.Is(err, repository.ErrNotFound) {
+			return status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return status.Errorf(codes.Internal, err.Error())
+		}
+	}
+	sl := model.UpdateShoppingList(dto)
+	err = s.repository.UpdateSl(ctx, id, sl)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
 			return status.Errorf(codes.NotFound, err.Error())
 		} else {
 			return status.Errorf(codes.Internal, err.Error())
@@ -88,7 +96,7 @@ func (s *service) UpdateShoppingList(ctx context.Context, id string, dto *model.
 func (s *service) DeleteShoppingListById(ctx context.Context, id string) error {
 	_, err := s.repository.GetSlById(ctx, id)
 	if err != nil {
-		if errors.Is(err, errors.New("NOT FOUND")) {
+		if errors.Is(err, repository.ErrNotFound) {
 			return status.Errorf(codes.NotFound, err.Error())
 		} else {
 			return status.Errorf(codes.Internal, err.Error())
@@ -105,7 +113,7 @@ func (s *service) CreateItem(ctx context.Context, dto *model.CreateItemDTO) erro
 	i := model.NewItem(dto)
 	err := s.repository.AddItem(ctx, i)
 	if err != nil {
-		if errors.Is(err, errors.New("NOT FOUND")) {
+		if errors.Is(err, repository.ErrNotFound) {
 			return status.Errorf(codes.NotFound, err.Error())
 		} else {
 			return status.Errorf(codes.Internal, err.Error())
@@ -117,7 +125,7 @@ func (s *service) CreateItem(ctx context.Context, dto *model.CreateItemDTO) erro
 func (s *service) GetItemById(ctx context.Context, id string) (*model.Item, error) {
 	i, err := s.repository.GetItemById(ctx, id)
 	if err != nil {
-		if errors.Is(err, errors.New("NOT FOUND")) {
+		if errors.Is(err, repository.ErrNotFound) {
 			return i, status.Errorf(codes.NotFound, err.Error())
 		} else {
 			return i, status.Errorf(codes.Internal, err.Error())
@@ -129,7 +137,7 @@ func (s *service) GetItemById(ctx context.Context, id string) (*model.Item, erro
 func (s *service) GetItems(ctx context.Context) ([]*model.Item, error) {
 	i, err := s.repository.GetItems(ctx)
 	if err != nil {
-		if errors.Is(err, errors.New("NOT FOUND")) {
+		if errors.Is(err, repository.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, err.Error())
 		} else {
 			return nil, status.Errorf(codes.Internal, err.Error())
@@ -142,10 +150,18 @@ func (s *service) UpdateItem(ctx context.Context, id string, dto *model.UpdateIt
 	if dto.Title == "" && dto.Comment == "" && dto.UserId == "" {
 		return status.Errorf(codes.InvalidArgument, "nothing to update")
 	}
-	i := model.UpdateItem(dto)
-	err := s.repository.UpdateItem(ctx, id, i)
+	_, err := s.repository.GetItemById(ctx, id)
 	if err != nil {
-		if errors.Is(err, errors.New("NOT FOUND")) {
+		if errors.Is(err, repository.ErrNotFound) {
+			return status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return status.Errorf(codes.Internal, err.Error())
+		}
+	}
+	i := model.UpdateItem(dto)
+	err = s.repository.UpdateItem(ctx, id, i)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
 			return status.Errorf(codes.NotFound, err.Error())
 		} else {
 			return status.Errorf(codes.Internal, err.Error())
@@ -157,7 +173,7 @@ func (s *service) UpdateItem(ctx context.Context, id string, dto *model.UpdateIt
 func (s *service) DeleteItemById(ctx context.Context, id string) error {
 	_, err := s.repository.GetItemById(ctx, id)
 	if err != nil {
-		if errors.Is(err, errors.New("NOT FOUND")) {
+		if errors.Is(err, repository.ErrNotFound) {
 			return status.Errorf(codes.NotFound, err.Error())
 		} else {
 			return status.Errorf(codes.Internal, err.Error())

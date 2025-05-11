@@ -35,7 +35,7 @@ func main() {
 			grpc2.LoggingInterceptor,
 		),
 	)
-	shopping_list_api.RegisterShoppingListServiceServer(s, &grpc2.GrpcServer{MongoDb: MongoDb, Service: Service})
+	shopping_list_api.RegisterShoppingListServiceServer(s, &grpc2.GrpcServer{Service: Service})
 
 	reflection.Register(s)
 
