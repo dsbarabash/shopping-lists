@@ -303,6 +303,7 @@ func (m *MongoDb) Login(ctx context.Context, user *model.User) (string, error) {
 		return "", err
 	}
 	if len(u) == 0 {
+		log.Println(repository.ErrNotFound)
 		return "", repository.ErrNotFound
 	} else {
 		if u[0].State != 1 {
@@ -316,6 +317,7 @@ func (m *MongoDb) Login(ctx context.Context, user *model.User) (string, error) {
 			})
 			tokenString, err := token.SignedString(secretKey)
 			if err != nil {
+				log.Println(err)
 				return "", err
 			}
 			return tokenString, nil
