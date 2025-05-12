@@ -4,6 +4,8 @@
 // 	protoc        v6.30.2
 // source: api/grpc/v1/shopping_list.proto
 
+// C:\Projects\Go\protoc-30.2-win64\bin\protoc --go_out=. --go-grpc_out=. api/grpc/v1/shopping_list.proto
+
 package shopping_list_api
 
 import (
@@ -269,7 +271,10 @@ type CreateShoppingListRequest struct {
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Title         string                 `protobuf:"bytes,2,opt,name=Title,proto3" json:"Title,omitempty"`
 	UserId        string                 `protobuf:"bytes,4,opt,name=UserId,proto3" json:"UserId,omitempty"`
-	Items         []string               `protobuf:"bytes,5,rep,name=items,proto3" json:"items,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=UpdatedAt,proto3" json:"UpdatedAt,omitempty"`
+	Items         []string               `protobuf:"bytes,8,rep,name=Items,proto3" json:"Items,omitempty"`
+	State         State                  `protobuf:"varint,9,opt,name=state,proto3,enum=shopping_list.v1.State" json:"state,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -325,11 +330,32 @@ func (x *CreateShoppingListRequest) GetUserId() string {
 	return ""
 }
 
+func (x *CreateShoppingListRequest) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *CreateShoppingListRequest) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
 func (x *CreateShoppingListRequest) GetItems() []string {
 	if x != nil {
 		return x.Items
 	}
 	return nil
+}
+
+func (x *CreateShoppingListRequest) GetState() State {
+	if x != nil {
+		return x.State
+	}
+	return State_STATE__DONT_USE
 }
 
 type CreateShoppingListResponse struct {
@@ -380,9 +406,11 @@ type UpdateShoppingListRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Title         string                 `protobuf:"bytes,2,opt,name=Title,proto3" json:"Title,omitempty"`
-	Comment       string                 `protobuf:"bytes,3,opt,name=Comment,proto3" json:"Comment,omitempty"`
 	UserId        string                 `protobuf:"bytes,4,opt,name=UserId,proto3" json:"UserId,omitempty"`
-	Items         []string               `protobuf:"bytes,5,rep,name=items,proto3" json:"items,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=UpdatedAt,proto3" json:"UpdatedAt,omitempty"`
+	Items         []string               `protobuf:"bytes,8,rep,name=Items,proto3" json:"Items,omitempty"`
+	State         State                  `protobuf:"varint,9,opt,name=state,proto3,enum=shopping_list.v1.State" json:"state,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -431,13 +459,6 @@ func (x *UpdateShoppingListRequest) GetTitle() string {
 	return ""
 }
 
-func (x *UpdateShoppingListRequest) GetComment() string {
-	if x != nil {
-		return x.Comment
-	}
-	return ""
-}
-
 func (x *UpdateShoppingListRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
@@ -445,11 +466,32 @@ func (x *UpdateShoppingListRequest) GetUserId() string {
 	return ""
 }
 
+func (x *UpdateShoppingListRequest) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *UpdateShoppingListRequest) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
 func (x *UpdateShoppingListRequest) GetItems() []string {
 	if x != nil {
 		return x.Items
 	}
 	return nil
+}
+
+func (x *UpdateShoppingListRequest) GetState() State {
+	if x != nil {
+		return x.State
+	}
+	return State_STATE__DONT_USE
 }
 
 type UpdateShoppingListResponse struct {
@@ -713,8 +755,11 @@ type CreateItemRequest struct {
 	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Title          string                 `protobuf:"bytes,2,opt,name=Title,proto3" json:"Title,omitempty"`
 	Comment        string                 `protobuf:"bytes,3,opt,name=Comment,proto3" json:"Comment,omitempty"`
-	UserId         string                 `protobuf:"bytes,4,opt,name=UserId,proto3" json:"UserId,omitempty"`
-	ShoppingListId string                 `protobuf:"bytes,5,opt,name=ShoppingListId,proto3" json:"ShoppingListId,omitempty"`
+	IsDone         bool                   `protobuf:"varint,4,opt,name=IsDone,proto3" json:"IsDone,omitempty"`
+	UserId         string                 `protobuf:"bytes,5,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty"`
+	UpdatedAt      *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=UpdatedAt,proto3" json:"UpdatedAt,omitempty"`
+	ShoppingListId string                 `protobuf:"bytes,8,opt,name=ShoppingListId,proto3" json:"ShoppingListId,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -770,11 +815,32 @@ func (x *CreateItemRequest) GetComment() string {
 	return ""
 }
 
+func (x *CreateItemRequest) GetIsDone() bool {
+	if x != nil {
+		return x.IsDone
+	}
+	return false
+}
+
 func (x *CreateItemRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
 	return ""
+}
+
+func (x *CreateItemRequest) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *CreateItemRequest) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
 }
 
 func (x *CreateItemRequest) GetShoppingListId() string {
@@ -833,8 +899,11 @@ type UpdateItemRequest struct {
 	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Title          string                 `protobuf:"bytes,2,opt,name=Title,proto3" json:"Title,omitempty"`
 	Comment        string                 `protobuf:"bytes,3,opt,name=Comment,proto3" json:"Comment,omitempty"`
-	UserId         string                 `protobuf:"bytes,4,opt,name=UserId,proto3" json:"UserId,omitempty"`
-	ShoppingListId string                 `protobuf:"bytes,5,opt,name=ShoppingListId,proto3" json:"ShoppingListId,omitempty"`
+	IsDone         bool                   `protobuf:"varint,4,opt,name=IsDone,proto3" json:"IsDone,omitempty"`
+	UserId         string                 `protobuf:"bytes,5,opt,name=UserId,proto3" json:"UserId,omitempty"`
+	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty"`
+	UpdatedAt      *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=UpdatedAt,proto3" json:"UpdatedAt,omitempty"`
+	ShoppingListId string                 `protobuf:"bytes,8,opt,name=ShoppingListId,proto3" json:"ShoppingListId,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -890,11 +959,32 @@ func (x *UpdateItemRequest) GetComment() string {
 	return ""
 }
 
+func (x *UpdateItemRequest) GetIsDone() bool {
+	if x != nil {
+		return x.IsDone
+	}
+	return false
+}
+
 func (x *UpdateItemRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
 	}
 	return ""
+}
+
+func (x *UpdateItemRequest) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *UpdateItemRequest) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
 }
 
 func (x *UpdateItemRequest) GetShoppingListId() string {
@@ -1181,20 +1271,25 @@ const file_api_grpc_v1_shopping_list_proto_rawDesc = "" +
 	"\x06UserId\x18\x05 \x01(\tR\x06UserId\x128\n" +
 	"\tCreatedAt\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tCreatedAt\x128\n" +
 	"\tUpdatedAt\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tUpdatedAt\x12&\n" +
-	"\x0eShoppingListId\x18\b \x01(\tR\x0eShoppingListId\"o\n" +
+	"\x0eShoppingListId\x18\b \x01(\tR\x0eShoppingListId\"\x92\x02\n" +
 	"\x19CreateShoppingListRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05Title\x18\x02 \x01(\tR\x05Title\x12\x16\n" +
-	"\x06UserId\x18\x04 \x01(\tR\x06UserId\x12\x14\n" +
-	"\x05items\x18\x05 \x03(\tR\x05items\"`\n" +
+	"\x06UserId\x18\x04 \x01(\tR\x06UserId\x128\n" +
+	"\tCreatedAt\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tCreatedAt\x128\n" +
+	"\tUpdatedAt\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tUpdatedAt\x12\x14\n" +
+	"\x05Items\x18\b \x03(\tR\x05Items\x12-\n" +
+	"\x05state\x18\t \x01(\x0e2\x17.shopping_list.v1.StateR\x05state\"`\n" +
 	"\x1aCreateShoppingListResponse\x12B\n" +
-	"\fshoppingList\x18\x01 \x01(\v2\x1e.shopping_list.v1.ShoppingListR\fshoppingList\"\x89\x01\n" +
+	"\fshoppingList\x18\x01 \x01(\v2\x1e.shopping_list.v1.ShoppingListR\fshoppingList\"\x92\x02\n" +
 	"\x19UpdateShoppingListRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
-	"\x05Title\x18\x02 \x01(\tR\x05Title\x12\x18\n" +
-	"\aComment\x18\x03 \x01(\tR\aComment\x12\x16\n" +
-	"\x06UserId\x18\x04 \x01(\tR\x06UserId\x12\x14\n" +
-	"\x05items\x18\x05 \x03(\tR\x05items\"`\n" +
+	"\x05Title\x18\x02 \x01(\tR\x05Title\x12\x16\n" +
+	"\x06UserId\x18\x04 \x01(\tR\x06UserId\x128\n" +
+	"\tCreatedAt\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tCreatedAt\x128\n" +
+	"\tUpdatedAt\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tUpdatedAt\x12\x14\n" +
+	"\x05Items\x18\b \x03(\tR\x05Items\x12-\n" +
+	"\x05state\x18\t \x01(\x0e2\x17.shopping_list.v1.StateR\x05state\"`\n" +
 	"\x1aUpdateShoppingListResponse\x12B\n" +
 	"\fshoppingList\x18\x01 \x01(\v2\x1e.shopping_list.v1.ShoppingListR\fshoppingList\"+\n" +
 	"\x19DeleteShoppingListRequest\x12\x0e\n" +
@@ -1205,21 +1300,27 @@ const file_api_grpc_v1_shopping_list_proto_rawDesc = "" +
 	"\x17GetShoppingListResponse\x12B\n" +
 	"\fshoppingList\x18\x01 \x01(\v2\x1e.shopping_list.v1.ShoppingListR\fshoppingList\"^\n" +
 	"\x18GetShoppingListsResponse\x12B\n" +
-	"\fshoppingList\x18\x01 \x03(\v2\x1e.shopping_list.v1.ShoppingListR\fshoppingList\"\x93\x01\n" +
+	"\fshoppingList\x18\x01 \x03(\v2\x1e.shopping_list.v1.ShoppingListR\fshoppingList\"\x9f\x02\n" +
 	"\x11CreateItemRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05Title\x18\x02 \x01(\tR\x05Title\x12\x18\n" +
 	"\aComment\x18\x03 \x01(\tR\aComment\x12\x16\n" +
-	"\x06UserId\x18\x04 \x01(\tR\x06UserId\x12&\n" +
-	"\x0eShoppingListId\x18\x05 \x01(\tR\x0eShoppingListId\"@\n" +
+	"\x06IsDone\x18\x04 \x01(\bR\x06IsDone\x12\x16\n" +
+	"\x06UserId\x18\x05 \x01(\tR\x06UserId\x128\n" +
+	"\tCreatedAt\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tCreatedAt\x128\n" +
+	"\tUpdatedAt\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tUpdatedAt\x12&\n" +
+	"\x0eShoppingListId\x18\b \x01(\tR\x0eShoppingListId\"@\n" +
 	"\x12CreateItemResponse\x12*\n" +
-	"\x04item\x18\x01 \x01(\v2\x16.shopping_list.v1.ItemR\x04item\"\x93\x01\n" +
+	"\x04item\x18\x01 \x01(\v2\x16.shopping_list.v1.ItemR\x04item\"\x9f\x02\n" +
 	"\x11UpdateItemRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05Title\x18\x02 \x01(\tR\x05Title\x12\x18\n" +
 	"\aComment\x18\x03 \x01(\tR\aComment\x12\x16\n" +
-	"\x06UserId\x18\x04 \x01(\tR\x06UserId\x12&\n" +
-	"\x0eShoppingListId\x18\x05 \x01(\tR\x0eShoppingListId\"@\n" +
+	"\x06IsDone\x18\x04 \x01(\bR\x06IsDone\x12\x16\n" +
+	"\x06UserId\x18\x05 \x01(\tR\x06UserId\x128\n" +
+	"\tCreatedAt\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tCreatedAt\x128\n" +
+	"\tUpdatedAt\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tUpdatedAt\x12&\n" +
+	"\x0eShoppingListId\x18\b \x01(\tR\x0eShoppingListId\"@\n" +
 	"\x12UpdateItemResponse\x12*\n" +
 	"\x04item\x18\x01 \x01(\v2\x16.shopping_list.v1.ItemR\x04item\"#\n" +
 	"\x11DeleteItemRequest\x12\x0e\n" +
@@ -1295,39 +1396,49 @@ var file_api_grpc_v1_shopping_list_proto_depIdxs = []int32{
 	0,  // 2: shopping_list.v1.ShoppingList.state:type_name -> shopping_list.v1.State
 	21, // 3: shopping_list.v1.Item.CreatedAt:type_name -> google.protobuf.Timestamp
 	21, // 4: shopping_list.v1.Item.UpdatedAt:type_name -> google.protobuf.Timestamp
-	1,  // 5: shopping_list.v1.CreateShoppingListResponse.shoppingList:type_name -> shopping_list.v1.ShoppingList
-	1,  // 6: shopping_list.v1.UpdateShoppingListResponse.shoppingList:type_name -> shopping_list.v1.ShoppingList
-	1,  // 7: shopping_list.v1.GetShoppingListResponse.shoppingList:type_name -> shopping_list.v1.ShoppingList
-	1,  // 8: shopping_list.v1.GetShoppingListsResponse.shoppingList:type_name -> shopping_list.v1.ShoppingList
-	2,  // 9: shopping_list.v1.CreateItemResponse.item:type_name -> shopping_list.v1.Item
-	2,  // 10: shopping_list.v1.UpdateItemResponse.item:type_name -> shopping_list.v1.Item
-	2,  // 11: shopping_list.v1.GetItemsResponse.items:type_name -> shopping_list.v1.Item
-	2,  // 12: shopping_list.v1.GetItemResponse.item:type_name -> shopping_list.v1.Item
-	19, // 13: shopping_list.v1.ShoppingListService.GetItem:input_type -> shopping_list.v1.GetItemRequest
-	22, // 14: shopping_list.v1.ShoppingListService.GetItems:input_type -> google.protobuf.Empty
-	12, // 15: shopping_list.v1.ShoppingListService.CreateItem:input_type -> shopping_list.v1.CreateItemRequest
-	14, // 16: shopping_list.v1.ShoppingListService.UpdateItem:input_type -> shopping_list.v1.UpdateItemRequest
-	16, // 17: shopping_list.v1.ShoppingListService.DeleteItem:input_type -> shopping_list.v1.DeleteItemRequest
-	9,  // 18: shopping_list.v1.ShoppingListService.GetShoppingList:input_type -> shopping_list.v1.GetShoppingListRequest
-	22, // 19: shopping_list.v1.ShoppingListService.GetShoppingLists:input_type -> google.protobuf.Empty
-	3,  // 20: shopping_list.v1.ShoppingListService.CreateShoppingList:input_type -> shopping_list.v1.CreateShoppingListRequest
-	5,  // 21: shopping_list.v1.ShoppingListService.UpdateShoppingList:input_type -> shopping_list.v1.UpdateShoppingListRequest
-	7,  // 22: shopping_list.v1.ShoppingListService.DeleteShoppingList:input_type -> shopping_list.v1.DeleteShoppingListRequest
-	20, // 23: shopping_list.v1.ShoppingListService.GetItem:output_type -> shopping_list.v1.GetItemResponse
-	18, // 24: shopping_list.v1.ShoppingListService.GetItems:output_type -> shopping_list.v1.GetItemsResponse
-	13, // 25: shopping_list.v1.ShoppingListService.CreateItem:output_type -> shopping_list.v1.CreateItemResponse
-	15, // 26: shopping_list.v1.ShoppingListService.UpdateItem:output_type -> shopping_list.v1.UpdateItemResponse
-	17, // 27: shopping_list.v1.ShoppingListService.DeleteItem:output_type -> shopping_list.v1.DeleteItemResponse
-	10, // 28: shopping_list.v1.ShoppingListService.GetShoppingList:output_type -> shopping_list.v1.GetShoppingListResponse
-	11, // 29: shopping_list.v1.ShoppingListService.GetShoppingLists:output_type -> shopping_list.v1.GetShoppingListsResponse
-	4,  // 30: shopping_list.v1.ShoppingListService.CreateShoppingList:output_type -> shopping_list.v1.CreateShoppingListResponse
-	6,  // 31: shopping_list.v1.ShoppingListService.UpdateShoppingList:output_type -> shopping_list.v1.UpdateShoppingListResponse
-	8,  // 32: shopping_list.v1.ShoppingListService.DeleteShoppingList:output_type -> shopping_list.v1.DeleteShoppingListResponse
-	23, // [23:33] is the sub-list for method output_type
-	13, // [13:23] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	21, // 5: shopping_list.v1.CreateShoppingListRequest.CreatedAt:type_name -> google.protobuf.Timestamp
+	21, // 6: shopping_list.v1.CreateShoppingListRequest.UpdatedAt:type_name -> google.protobuf.Timestamp
+	0,  // 7: shopping_list.v1.CreateShoppingListRequest.state:type_name -> shopping_list.v1.State
+	1,  // 8: shopping_list.v1.CreateShoppingListResponse.shoppingList:type_name -> shopping_list.v1.ShoppingList
+	21, // 9: shopping_list.v1.UpdateShoppingListRequest.CreatedAt:type_name -> google.protobuf.Timestamp
+	21, // 10: shopping_list.v1.UpdateShoppingListRequest.UpdatedAt:type_name -> google.protobuf.Timestamp
+	0,  // 11: shopping_list.v1.UpdateShoppingListRequest.state:type_name -> shopping_list.v1.State
+	1,  // 12: shopping_list.v1.UpdateShoppingListResponse.shoppingList:type_name -> shopping_list.v1.ShoppingList
+	1,  // 13: shopping_list.v1.GetShoppingListResponse.shoppingList:type_name -> shopping_list.v1.ShoppingList
+	1,  // 14: shopping_list.v1.GetShoppingListsResponse.shoppingList:type_name -> shopping_list.v1.ShoppingList
+	21, // 15: shopping_list.v1.CreateItemRequest.CreatedAt:type_name -> google.protobuf.Timestamp
+	21, // 16: shopping_list.v1.CreateItemRequest.UpdatedAt:type_name -> google.protobuf.Timestamp
+	2,  // 17: shopping_list.v1.CreateItemResponse.item:type_name -> shopping_list.v1.Item
+	21, // 18: shopping_list.v1.UpdateItemRequest.CreatedAt:type_name -> google.protobuf.Timestamp
+	21, // 19: shopping_list.v1.UpdateItemRequest.UpdatedAt:type_name -> google.protobuf.Timestamp
+	2,  // 20: shopping_list.v1.UpdateItemResponse.item:type_name -> shopping_list.v1.Item
+	2,  // 21: shopping_list.v1.GetItemsResponse.items:type_name -> shopping_list.v1.Item
+	2,  // 22: shopping_list.v1.GetItemResponse.item:type_name -> shopping_list.v1.Item
+	19, // 23: shopping_list.v1.ShoppingListService.GetItem:input_type -> shopping_list.v1.GetItemRequest
+	22, // 24: shopping_list.v1.ShoppingListService.GetItems:input_type -> google.protobuf.Empty
+	12, // 25: shopping_list.v1.ShoppingListService.CreateItem:input_type -> shopping_list.v1.CreateItemRequest
+	14, // 26: shopping_list.v1.ShoppingListService.UpdateItem:input_type -> shopping_list.v1.UpdateItemRequest
+	16, // 27: shopping_list.v1.ShoppingListService.DeleteItem:input_type -> shopping_list.v1.DeleteItemRequest
+	9,  // 28: shopping_list.v1.ShoppingListService.GetShoppingList:input_type -> shopping_list.v1.GetShoppingListRequest
+	22, // 29: shopping_list.v1.ShoppingListService.GetShoppingLists:input_type -> google.protobuf.Empty
+	3,  // 30: shopping_list.v1.ShoppingListService.CreateShoppingList:input_type -> shopping_list.v1.CreateShoppingListRequest
+	5,  // 31: shopping_list.v1.ShoppingListService.UpdateShoppingList:input_type -> shopping_list.v1.UpdateShoppingListRequest
+	7,  // 32: shopping_list.v1.ShoppingListService.DeleteShoppingList:input_type -> shopping_list.v1.DeleteShoppingListRequest
+	20, // 33: shopping_list.v1.ShoppingListService.GetItem:output_type -> shopping_list.v1.GetItemResponse
+	18, // 34: shopping_list.v1.ShoppingListService.GetItems:output_type -> shopping_list.v1.GetItemsResponse
+	13, // 35: shopping_list.v1.ShoppingListService.CreateItem:output_type -> shopping_list.v1.CreateItemResponse
+	15, // 36: shopping_list.v1.ShoppingListService.UpdateItem:output_type -> shopping_list.v1.UpdateItemResponse
+	17, // 37: shopping_list.v1.ShoppingListService.DeleteItem:output_type -> shopping_list.v1.DeleteItemResponse
+	10, // 38: shopping_list.v1.ShoppingListService.GetShoppingList:output_type -> shopping_list.v1.GetShoppingListResponse
+	11, // 39: shopping_list.v1.ShoppingListService.GetShoppingLists:output_type -> shopping_list.v1.GetShoppingListsResponse
+	4,  // 40: shopping_list.v1.ShoppingListService.CreateShoppingList:output_type -> shopping_list.v1.CreateShoppingListResponse
+	6,  // 41: shopping_list.v1.ShoppingListService.UpdateShoppingList:output_type -> shopping_list.v1.UpdateShoppingListResponse
+	8,  // 42: shopping_list.v1.ShoppingListService.DeleteShoppingList:output_type -> shopping_list.v1.DeleteShoppingListResponse
+	33, // [33:43] is the sub-list for method output_type
+	23, // [23:33] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_api_grpc_v1_shopping_list_proto_init() }

@@ -1,9 +1,12 @@
 package main
 
 import (
-	"github.com/dsbarabash/shopping-lists/internal/handler"
+	grpc2 "github.com/dsbarabash/shopping-lists/internal/frontend/grpc"
 	"github.com/dsbarabash/shopping-lists/internal/proto_api/pkg/grpc/v1/shopping_list_api"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
+	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
+	"github.com/dsbarabash/shopping-lists/internal/repository/redis"
+	"github.com/dsbarabash/shopping-lists/internal/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
@@ -11,14 +14,15 @@ import (
 )
 
 func main() {
-	MongoDb, err := repository.ConnectMongoDb()
+	MongoDb, err := mongo.ConnectMongoDb()
 	if err != nil {
 		log.Fatal(err)
 	}
-	RedisDB, err := repository.ConnectRedisDb()
+	RedisDB, err := redis.ConnectRedisDb()
 	if err != nil {
 		log.Fatal(err)
 	}
+	Service, err := service.NewService(MongoDb)
 	logWriter := repository.NewLogWriter(RedisDB)
 	log.SetOutput(logWriter)
 
@@ -28,10 +32,10 @@ func main() {
 	}
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(
-			handler.LoggingInterceptor,
+			grpc2.LoggingInterceptor,
 		),
 	)
-	shopping_list_api.RegisterShoppingListServiceServer(s, &handler.GrpcServer{MongoDb: MongoDb})
+	shopping_list_api.RegisterShoppingListServiceServer(s, &grpc2.GrpcServer{Service: Service})
 
 	reflection.Register(s)
 
