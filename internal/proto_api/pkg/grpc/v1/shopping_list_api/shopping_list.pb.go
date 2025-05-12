@@ -28,22 +28,22 @@ const (
 type State int32
 
 const (
-	State_STATE__DONT_USE State = 0
-	State_STATE_ARCHIVED  State = 1
-	State_STATE_ACTIVE    State = 2
+	State_STATE_DONT_USE State = 0
+	State_STATE_ARCHIVED State = 1
+	State_STATE_ACTIVE   State = 2
 )
 
 // Enum value maps for State.
 var (
 	State_name = map[int32]string{
-		0: "STATE__DONT_USE",
+		0: "STATE_DONT_USE",
 		1: "STATE_ARCHIVED",
 		2: "STATE_ACTIVE",
 	}
 	State_value = map[string]int32{
-		"STATE__DONT_USE": 0,
-		"STATE_ARCHIVED":  1,
-		"STATE_ACTIVE":    2,
+		"STATE_DONT_USE": 0,
+		"STATE_ARCHIVED": 1,
+		"STATE_ACTIVE":   2,
 	}
 )
 
@@ -163,7 +163,7 @@ func (x *ShoppingList) GetState() State {
 	if x != nil {
 		return x.State
 	}
-	return State_STATE__DONT_USE
+	return State_STATE_DONT_USE
 }
 
 type Item struct {
@@ -355,7 +355,7 @@ func (x *CreateShoppingListRequest) GetState() State {
 	if x != nil {
 		return x.State
 	}
-	return State_STATE__DONT_USE
+	return State_STATE_DONT_USE
 }
 
 type CreateShoppingListResponse struct {
@@ -491,7 +491,7 @@ func (x *UpdateShoppingListRequest) GetState() State {
 	if x != nil {
 		return x.State
 	}
-	return State_STATE__DONT_USE
+	return State_STATE_DONT_USE
 }
 
 type UpdateShoppingListResponse struct {
@@ -1331,9 +1331,9 @@ const file_api_grpc_v1_shopping_list_proto_rawDesc = "" +
 	"\x0eGetItemRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"=\n" +
 	"\x0fGetItemResponse\x12*\n" +
-	"\x04item\x18\x01 \x01(\v2\x16.shopping_list.v1.ItemR\x04item*B\n" +
-	"\x05State\x12\x13\n" +
-	"\x0fSTATE__DONT_USE\x10\x00\x12\x12\n" +
+	"\x04item\x18\x01 \x01(\v2\x16.shopping_list.v1.ItemR\x04item*A\n" +
+	"\x05State\x12\x12\n" +
+	"\x0eSTATE_DONT_USE\x10\x00\x12\x12\n" +
 	"\x0eSTATE_ARCHIVED\x10\x01\x12\x10\n" +
 	"\fSTATE_ACTIVE\x10\x022\xcb\a\n" +
 	"\x13ShoppingListService\x12N\n" +

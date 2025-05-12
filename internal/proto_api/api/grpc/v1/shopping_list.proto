@@ -29,7 +29,7 @@ message Item {
 }
 
 enum State {
-  STATE__DONT_USE = 0;
+  STATE_DONT_USE = 0;
   STATE_ARCHIVED = 1;
   STATE_ACTIVE = 2;
 }
