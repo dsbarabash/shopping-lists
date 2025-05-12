@@ -134,6 +134,7 @@ func (s *GrpcServer) UpdateShoppingList(
 		UpdatedAt: req.GetUpdatedAt(),
 		UserId:    req.GetUserId(),
 		Items:     req.Items,
+		State:     model.State(req.GetState()),
 	}
 	err := s.Service.UpdateShoppingList(ctx, req.GetId(), sl)
 	if err != nil {

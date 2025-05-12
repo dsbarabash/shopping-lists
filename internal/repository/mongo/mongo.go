@@ -306,7 +306,7 @@ func (m *MongoDb) Login(ctx context.Context, user *model.User) (string, error) {
 		log.Println(repository.ErrNotFound)
 		return "", repository.ErrNotFound
 	} else {
-		if u[0].State != 1 {
+		if u[0].State != 2 {
 			return "", errors.New("USER NOT ACTIVE")
 		} else if u[0].Password == user.Password && u[0].Name == user.Name {
 			secretKey := []byte(config.Cfg.Secret)
