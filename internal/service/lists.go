@@ -24,6 +24,7 @@ type Service interface {
 	GetItems(ctx context.Context) ([]*model.Item, error)
 	UpdateItem(ctx context.Context, id string, dto *model.UpdateItemDTO) error
 	DeleteItemById(ctx context.Context, id string) error
+	GetItemsByShoppingListId(ctx context.Context, id string) ([]*model.Item, error)
 }
 
 func NewService(repository repository.Db) (Service, error) {
@@ -176,4 +177,20 @@ func (s *service) DeleteItemById(ctx context.Context, id string) error {
 		return status.Errorf(codes.Internal, err.Error())
 	}
 	return nil
+}
+
+func (s *service) GetItemsByShoppingListId(ctx context.Context, id string) ([]*model.Item, error) {
+	items, err := s.repository.GetItemsBySLId(ctx, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		} else {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+	}
+	err = s.repository.DeleteItemById(ctx, id)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return items, nil
 }

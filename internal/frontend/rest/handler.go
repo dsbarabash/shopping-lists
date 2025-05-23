@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/model"
+	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/dsbarabash/shopping-lists/internal/service"
 	_ "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -507,7 +508,7 @@ func (s *RestServer) DeleteItemById(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	err := s.Service.DeleteItemById(r.Context(), id)
 	if err != nil {
-		if errors.Is(err, errors.New("NOT FOUND")) {
+		if errors.Is(err, repository.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 			return
@@ -519,4 +520,42 @@ func (s *RestServer) DeleteItemById(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"success": true}`))
+}
+
+// GetItemsByShoppingListId
+// @Summary Получить список всех покупок по id листа покупок
+// @Tags item
+// @Accept			json
+// @Produce		json
+// @Success 200 {string}
+// @Failure 400 {string} string "Invalid request"
+// @Router /api/shopping_list_items/{id} [get]
+func (s *RestServer) GetItemsByShoppingListId(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	list, err := s.Service.GetItemsByShoppingListId(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
+			return
+		}
+	}
+	data, err := json.Marshal(struct {
+		Success bool `json:"success"`
+		Item    []*model.Item
+	}{
+		Success: true,
+		Item:    list,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"success": false, "error": "Internal Server Error"}`))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }

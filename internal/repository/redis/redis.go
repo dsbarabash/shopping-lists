@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
+	"log"
 )
 
 func ConnectRedisDb() (*redis.Client, error) {
@@ -16,6 +17,7 @@ func ConnectRedisDb() (*redis.Client, error) {
 	// Проверка соединения
 	_, err := client.Ping(ctx).Result()
 	if err != nil {
+		log.Println("Failed to connect to redis: ", err)
 		return nil, err
 	}
 	return client, nil

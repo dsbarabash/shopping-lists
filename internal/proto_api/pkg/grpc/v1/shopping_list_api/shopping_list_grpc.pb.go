@@ -4,8 +4,6 @@
 // - protoc             v6.30.2
 // source: api/grpc/v1/shopping_list.proto
 
-// C:\Projects\Go\protoc-30.2-win64\bin\protoc --go_out=. --go-grpc_out=. api/grpc/v1/shopping_list.proto
-
 package shopping_list_api
 
 import (
@@ -22,16 +20,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ShoppingListService_GetItem_FullMethodName            = "/shopping_list.v1.ShoppingListService/GetItem"
-	ShoppingListService_GetItems_FullMethodName           = "/shopping_list.v1.ShoppingListService/GetItems"
-	ShoppingListService_CreateItem_FullMethodName         = "/shopping_list.v1.ShoppingListService/CreateItem"
-	ShoppingListService_UpdateItem_FullMethodName         = "/shopping_list.v1.ShoppingListService/UpdateItem"
-	ShoppingListService_DeleteItem_FullMethodName         = "/shopping_list.v1.ShoppingListService/DeleteItem"
-	ShoppingListService_GetShoppingList_FullMethodName    = "/shopping_list.v1.ShoppingListService/GetShoppingList"
-	ShoppingListService_GetShoppingLists_FullMethodName   = "/shopping_list.v1.ShoppingListService/GetShoppingLists"
-	ShoppingListService_CreateShoppingList_FullMethodName = "/shopping_list.v1.ShoppingListService/CreateShoppingList"
-	ShoppingListService_UpdateShoppingList_FullMethodName = "/shopping_list.v1.ShoppingListService/UpdateShoppingList"
-	ShoppingListService_DeleteShoppingList_FullMethodName = "/shopping_list.v1.ShoppingListService/DeleteShoppingList"
+	ShoppingListService_GetItem_FullMethodName                  = "/shopping_list.v1.ShoppingListService/GetItem"
+	ShoppingListService_GetItems_FullMethodName                 = "/shopping_list.v1.ShoppingListService/GetItems"
+	ShoppingListService_CreateItem_FullMethodName               = "/shopping_list.v1.ShoppingListService/CreateItem"
+	ShoppingListService_UpdateItem_FullMethodName               = "/shopping_list.v1.ShoppingListService/UpdateItem"
+	ShoppingListService_DeleteItem_FullMethodName               = "/shopping_list.v1.ShoppingListService/DeleteItem"
+	ShoppingListService_GetShoppingList_FullMethodName          = "/shopping_list.v1.ShoppingListService/GetShoppingList"
+	ShoppingListService_GetShoppingLists_FullMethodName         = "/shopping_list.v1.ShoppingListService/GetShoppingLists"
+	ShoppingListService_CreateShoppingList_FullMethodName       = "/shopping_list.v1.ShoppingListService/CreateShoppingList"
+	ShoppingListService_UpdateShoppingList_FullMethodName       = "/shopping_list.v1.ShoppingListService/UpdateShoppingList"
+	ShoppingListService_DeleteShoppingList_FullMethodName       = "/shopping_list.v1.ShoppingListService/DeleteShoppingList"
+	ShoppingListService_GetItemsByShoppingListId_FullMethodName = "/shopping_list.v1.ShoppingListService/GetItemsByShoppingListId"
 )
 
 // ShoppingListServiceClient is the client API for ShoppingListService service.
@@ -48,6 +47,7 @@ type ShoppingListServiceClient interface {
 	CreateShoppingList(ctx context.Context, in *CreateShoppingListRequest, opts ...grpc.CallOption) (*CreateShoppingListResponse, error)
 	UpdateShoppingList(ctx context.Context, in *UpdateShoppingListRequest, opts ...grpc.CallOption) (*UpdateShoppingListResponse, error)
 	DeleteShoppingList(ctx context.Context, in *DeleteShoppingListRequest, opts ...grpc.CallOption) (*DeleteShoppingListResponse, error)
+	GetItemsByShoppingListId(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetItemsByShoppingListIdResponse, error)
 }
 
 type shoppingListServiceClient struct {
@@ -158,6 +158,16 @@ func (c *shoppingListServiceClient) DeleteShoppingList(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *shoppingListServiceClient) GetItemsByShoppingListId(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetItemsByShoppingListIdResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetItemsByShoppingListIdResponse)
+	err := c.cc.Invoke(ctx, ShoppingListService_GetItemsByShoppingListId_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ShoppingListServiceServer is the server API for ShoppingListService service.
 // All implementations must embed UnimplementedShoppingListServiceServer
 // for forward compatibility.
@@ -172,6 +182,7 @@ type ShoppingListServiceServer interface {
 	CreateShoppingList(context.Context, *CreateShoppingListRequest) (*CreateShoppingListResponse, error)
 	UpdateShoppingList(context.Context, *UpdateShoppingListRequest) (*UpdateShoppingListResponse, error)
 	DeleteShoppingList(context.Context, *DeleteShoppingListRequest) (*DeleteShoppingListResponse, error)
+	GetItemsByShoppingListId(context.Context, *emptypb.Empty) (*GetItemsByShoppingListIdResponse, error)
 	mustEmbedUnimplementedShoppingListServiceServer()
 }
 
@@ -211,6 +222,9 @@ func (UnimplementedShoppingListServiceServer) UpdateShoppingList(context.Context
 }
 func (UnimplementedShoppingListServiceServer) DeleteShoppingList(context.Context, *DeleteShoppingListRequest) (*DeleteShoppingListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteShoppingList not implemented")
+}
+func (UnimplementedShoppingListServiceServer) GetItemsByShoppingListId(context.Context, *emptypb.Empty) (*GetItemsByShoppingListIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetItemsByShoppingListId not implemented")
 }
 func (UnimplementedShoppingListServiceServer) mustEmbedUnimplementedShoppingListServiceServer() {}
 func (UnimplementedShoppingListServiceServer) testEmbeddedByValue()                             {}
@@ -413,6 +427,24 @@ func _ShoppingListService_DeleteShoppingList_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ShoppingListService_GetItemsByShoppingListId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ShoppingListServiceServer).GetItemsByShoppingListId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ShoppingListService_GetItemsByShoppingListId_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ShoppingListServiceServer).GetItemsByShoppingListId(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ShoppingListService_ServiceDesc is the grpc.ServiceDesc for ShoppingListService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -459,6 +491,10 @@ var ShoppingListService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteShoppingList",
 			Handler:    _ShoppingListService_DeleteShoppingList_Handler,
+		},
+		{
+			MethodName: "GetItemsByShoppingListId",
+			Handler:    _ShoppingListService_GetItemsByShoppingListId_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

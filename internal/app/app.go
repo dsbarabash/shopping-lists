@@ -74,6 +74,9 @@ func (a *App) Start() error {
 	mux.HandleFunc("DELETE /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
 		rest.UserIdentity(w, r, a.server.DeleteShoppingListById)
 	})
+	mux.HandleFunc("GET /api/shopping_list_items/{id}", func(w http.ResponseWriter, r *http.Request) {
+		rest.UserIdentity(w, r, a.server.GetItemsByShoppingListId)
+	})
 
 	serverHTTP := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", a.cfg.Host, a.cfg.Port),

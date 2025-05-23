@@ -4,8 +4,6 @@
 // 	protoc        v6.30.2
 // source: api/grpc/v1/shopping_list.proto
 
-// C:\Projects\Go\protoc-30.2-win64\bin\protoc --go_out=. --go-grpc_out=. api/grpc/v1/shopping_list.proto
-
 package shopping_list_api
 
 import (
@@ -1250,6 +1248,50 @@ func (x *GetItemResponse) GetItem() *Item {
 	return nil
 }
 
+type GetItemsByShoppingListIdResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*Item                `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetItemsByShoppingListIdResponse) Reset() {
+	*x = GetItemsByShoppingListIdResponse{}
+	mi := &file_api_grpc_v1_shopping_list_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetItemsByShoppingListIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetItemsByShoppingListIdResponse) ProtoMessage() {}
+
+func (x *GetItemsByShoppingListIdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_grpc_v1_shopping_list_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetItemsByShoppingListIdResponse.ProtoReflect.Descriptor instead.
+func (*GetItemsByShoppingListIdResponse) Descriptor() ([]byte, []int) {
+	return file_api_grpc_v1_shopping_list_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *GetItemsByShoppingListIdResponse) GetItems() []*Item {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
 var File_api_grpc_v1_shopping_list_proto protoreflect.FileDescriptor
 
 const file_api_grpc_v1_shopping_list_proto_rawDesc = "" +
@@ -1331,11 +1373,13 @@ const file_api_grpc_v1_shopping_list_proto_rawDesc = "" +
 	"\x0eGetItemRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"=\n" +
 	"\x0fGetItemResponse\x12*\n" +
-	"\x04item\x18\x01 \x01(\v2\x16.shopping_list.v1.ItemR\x04item*A\n" +
+	"\x04item\x18\x01 \x01(\v2\x16.shopping_list.v1.ItemR\x04item\"P\n" +
+	" GetItemsByShoppingListIdResponse\x12,\n" +
+	"\x05items\x18\x01 \x03(\v2\x16.shopping_list.v1.ItemR\x05items*A\n" +
 	"\x05State\x12\x12\n" +
 	"\x0eSTATE_DONT_USE\x10\x00\x12\x12\n" +
 	"\x0eSTATE_ARCHIVED\x10\x01\x12\x10\n" +
-	"\fSTATE_ACTIVE\x10\x022\xcb\a\n" +
+	"\fSTATE_ACTIVE\x10\x022\xb3\b\n" +
 	"\x13ShoppingListService\x12N\n" +
 	"\aGetItem\x12 .shopping_list.v1.GetItemRequest\x1a!.shopping_list.v1.GetItemResponse\x12F\n" +
 	"\bGetItems\x12\x16.google.protobuf.Empty\x1a\".shopping_list.v1.GetItemsResponse\x12W\n" +
@@ -1349,7 +1393,8 @@ const file_api_grpc_v1_shopping_list_proto_rawDesc = "" +
 	"\x10GetShoppingLists\x12\x16.google.protobuf.Empty\x1a*.shopping_list.v1.GetShoppingListsResponse\x12o\n" +
 	"\x12CreateShoppingList\x12+.shopping_list.v1.CreateShoppingListRequest\x1a,.shopping_list.v1.CreateShoppingListResponse\x12o\n" +
 	"\x12UpdateShoppingList\x12+.shopping_list.v1.UpdateShoppingListRequest\x1a,.shopping_list.v1.UpdateShoppingListResponse\x12o\n" +
-	"\x12DeleteShoppingList\x12+.shopping_list.v1.DeleteShoppingListRequest\x1a,.shopping_list.v1.DeleteShoppingListResponseB\x1fZ\x1dpkg/grpc/v1/shopping_list_apib\x06proto3"
+	"\x12DeleteShoppingList\x12+.shopping_list.v1.DeleteShoppingListRequest\x1a,.shopping_list.v1.DeleteShoppingListResponse\x12f\n" +
+	"\x18GetItemsByShoppingListId\x12\x16.google.protobuf.Empty\x1a2.shopping_list.v1.GetItemsByShoppingListIdResponseB\x1fZ\x1dpkg/grpc/v1/shopping_list_apib\x06proto3"
 
 var (
 	file_api_grpc_v1_shopping_list_proto_rawDescOnce sync.Once
@@ -1364,81 +1409,85 @@ func file_api_grpc_v1_shopping_list_proto_rawDescGZIP() []byte {
 }
 
 var file_api_grpc_v1_shopping_list_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_api_grpc_v1_shopping_list_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_api_grpc_v1_shopping_list_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_api_grpc_v1_shopping_list_proto_goTypes = []any{
-	(State)(0),                         // 0: shopping_list.v1.State
-	(*ShoppingList)(nil),               // 1: shopping_list.v1.ShoppingList
-	(*Item)(nil),                       // 2: shopping_list.v1.Item
-	(*CreateShoppingListRequest)(nil),  // 3: shopping_list.v1.CreateShoppingListRequest
-	(*CreateShoppingListResponse)(nil), // 4: shopping_list.v1.CreateShoppingListResponse
-	(*UpdateShoppingListRequest)(nil),  // 5: shopping_list.v1.UpdateShoppingListRequest
-	(*UpdateShoppingListResponse)(nil), // 6: shopping_list.v1.UpdateShoppingListResponse
-	(*DeleteShoppingListRequest)(nil),  // 7: shopping_list.v1.DeleteShoppingListRequest
-	(*DeleteShoppingListResponse)(nil), // 8: shopping_list.v1.DeleteShoppingListResponse
-	(*GetShoppingListRequest)(nil),     // 9: shopping_list.v1.GetShoppingListRequest
-	(*GetShoppingListResponse)(nil),    // 10: shopping_list.v1.GetShoppingListResponse
-	(*GetShoppingListsResponse)(nil),   // 11: shopping_list.v1.GetShoppingListsResponse
-	(*CreateItemRequest)(nil),          // 12: shopping_list.v1.CreateItemRequest
-	(*CreateItemResponse)(nil),         // 13: shopping_list.v1.CreateItemResponse
-	(*UpdateItemRequest)(nil),          // 14: shopping_list.v1.UpdateItemRequest
-	(*UpdateItemResponse)(nil),         // 15: shopping_list.v1.UpdateItemResponse
-	(*DeleteItemRequest)(nil),          // 16: shopping_list.v1.DeleteItemRequest
-	(*DeleteItemResponse)(nil),         // 17: shopping_list.v1.DeleteItemResponse
-	(*GetItemsResponse)(nil),           // 18: shopping_list.v1.GetItemsResponse
-	(*GetItemRequest)(nil),             // 19: shopping_list.v1.GetItemRequest
-	(*GetItemResponse)(nil),            // 20: shopping_list.v1.GetItemResponse
-	(*timestamppb.Timestamp)(nil),      // 21: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),              // 22: google.protobuf.Empty
+	(State)(0),                               // 0: shopping_list.v1.State
+	(*ShoppingList)(nil),                     // 1: shopping_list.v1.ShoppingList
+	(*Item)(nil),                             // 2: shopping_list.v1.Item
+	(*CreateShoppingListRequest)(nil),        // 3: shopping_list.v1.CreateShoppingListRequest
+	(*CreateShoppingListResponse)(nil),       // 4: shopping_list.v1.CreateShoppingListResponse
+	(*UpdateShoppingListRequest)(nil),        // 5: shopping_list.v1.UpdateShoppingListRequest
+	(*UpdateShoppingListResponse)(nil),       // 6: shopping_list.v1.UpdateShoppingListResponse
+	(*DeleteShoppingListRequest)(nil),        // 7: shopping_list.v1.DeleteShoppingListRequest
+	(*DeleteShoppingListResponse)(nil),       // 8: shopping_list.v1.DeleteShoppingListResponse
+	(*GetShoppingListRequest)(nil),           // 9: shopping_list.v1.GetShoppingListRequest
+	(*GetShoppingListResponse)(nil),          // 10: shopping_list.v1.GetShoppingListResponse
+	(*GetShoppingListsResponse)(nil),         // 11: shopping_list.v1.GetShoppingListsResponse
+	(*CreateItemRequest)(nil),                // 12: shopping_list.v1.CreateItemRequest
+	(*CreateItemResponse)(nil),               // 13: shopping_list.v1.CreateItemResponse
+	(*UpdateItemRequest)(nil),                // 14: shopping_list.v1.UpdateItemRequest
+	(*UpdateItemResponse)(nil),               // 15: shopping_list.v1.UpdateItemResponse
+	(*DeleteItemRequest)(nil),                // 16: shopping_list.v1.DeleteItemRequest
+	(*DeleteItemResponse)(nil),               // 17: shopping_list.v1.DeleteItemResponse
+	(*GetItemsResponse)(nil),                 // 18: shopping_list.v1.GetItemsResponse
+	(*GetItemRequest)(nil),                   // 19: shopping_list.v1.GetItemRequest
+	(*GetItemResponse)(nil),                  // 20: shopping_list.v1.GetItemResponse
+	(*GetItemsByShoppingListIdResponse)(nil), // 21: shopping_list.v1.GetItemsByShoppingListIdResponse
+	(*timestamppb.Timestamp)(nil),            // 22: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),                    // 23: google.protobuf.Empty
 }
 var file_api_grpc_v1_shopping_list_proto_depIdxs = []int32{
-	21, // 0: shopping_list.v1.ShoppingList.CreatedAt:type_name -> google.protobuf.Timestamp
-	21, // 1: shopping_list.v1.ShoppingList.UpdatedAt:type_name -> google.protobuf.Timestamp
+	22, // 0: shopping_list.v1.ShoppingList.CreatedAt:type_name -> google.protobuf.Timestamp
+	22, // 1: shopping_list.v1.ShoppingList.UpdatedAt:type_name -> google.protobuf.Timestamp
 	0,  // 2: shopping_list.v1.ShoppingList.state:type_name -> shopping_list.v1.State
-	21, // 3: shopping_list.v1.Item.CreatedAt:type_name -> google.protobuf.Timestamp
-	21, // 4: shopping_list.v1.Item.UpdatedAt:type_name -> google.protobuf.Timestamp
-	21, // 5: shopping_list.v1.CreateShoppingListRequest.CreatedAt:type_name -> google.protobuf.Timestamp
-	21, // 6: shopping_list.v1.CreateShoppingListRequest.UpdatedAt:type_name -> google.protobuf.Timestamp
+	22, // 3: shopping_list.v1.Item.CreatedAt:type_name -> google.protobuf.Timestamp
+	22, // 4: shopping_list.v1.Item.UpdatedAt:type_name -> google.protobuf.Timestamp
+	22, // 5: shopping_list.v1.CreateShoppingListRequest.CreatedAt:type_name -> google.protobuf.Timestamp
+	22, // 6: shopping_list.v1.CreateShoppingListRequest.UpdatedAt:type_name -> google.protobuf.Timestamp
 	0,  // 7: shopping_list.v1.CreateShoppingListRequest.state:type_name -> shopping_list.v1.State
 	1,  // 8: shopping_list.v1.CreateShoppingListResponse.shoppingList:type_name -> shopping_list.v1.ShoppingList
-	21, // 9: shopping_list.v1.UpdateShoppingListRequest.CreatedAt:type_name -> google.protobuf.Timestamp
-	21, // 10: shopping_list.v1.UpdateShoppingListRequest.UpdatedAt:type_name -> google.protobuf.Timestamp
+	22, // 9: shopping_list.v1.UpdateShoppingListRequest.CreatedAt:type_name -> google.protobuf.Timestamp
+	22, // 10: shopping_list.v1.UpdateShoppingListRequest.UpdatedAt:type_name -> google.protobuf.Timestamp
 	0,  // 11: shopping_list.v1.UpdateShoppingListRequest.state:type_name -> shopping_list.v1.State
 	1,  // 12: shopping_list.v1.UpdateShoppingListResponse.shoppingList:type_name -> shopping_list.v1.ShoppingList
 	1,  // 13: shopping_list.v1.GetShoppingListResponse.shoppingList:type_name -> shopping_list.v1.ShoppingList
 	1,  // 14: shopping_list.v1.GetShoppingListsResponse.shoppingList:type_name -> shopping_list.v1.ShoppingList
-	21, // 15: shopping_list.v1.CreateItemRequest.CreatedAt:type_name -> google.protobuf.Timestamp
-	21, // 16: shopping_list.v1.CreateItemRequest.UpdatedAt:type_name -> google.protobuf.Timestamp
+	22, // 15: shopping_list.v1.CreateItemRequest.CreatedAt:type_name -> google.protobuf.Timestamp
+	22, // 16: shopping_list.v1.CreateItemRequest.UpdatedAt:type_name -> google.protobuf.Timestamp
 	2,  // 17: shopping_list.v1.CreateItemResponse.item:type_name -> shopping_list.v1.Item
-	21, // 18: shopping_list.v1.UpdateItemRequest.CreatedAt:type_name -> google.protobuf.Timestamp
-	21, // 19: shopping_list.v1.UpdateItemRequest.UpdatedAt:type_name -> google.protobuf.Timestamp
+	22, // 18: shopping_list.v1.UpdateItemRequest.CreatedAt:type_name -> google.protobuf.Timestamp
+	22, // 19: shopping_list.v1.UpdateItemRequest.UpdatedAt:type_name -> google.protobuf.Timestamp
 	2,  // 20: shopping_list.v1.UpdateItemResponse.item:type_name -> shopping_list.v1.Item
 	2,  // 21: shopping_list.v1.GetItemsResponse.items:type_name -> shopping_list.v1.Item
 	2,  // 22: shopping_list.v1.GetItemResponse.item:type_name -> shopping_list.v1.Item
-	19, // 23: shopping_list.v1.ShoppingListService.GetItem:input_type -> shopping_list.v1.GetItemRequest
-	22, // 24: shopping_list.v1.ShoppingListService.GetItems:input_type -> google.protobuf.Empty
-	12, // 25: shopping_list.v1.ShoppingListService.CreateItem:input_type -> shopping_list.v1.CreateItemRequest
-	14, // 26: shopping_list.v1.ShoppingListService.UpdateItem:input_type -> shopping_list.v1.UpdateItemRequest
-	16, // 27: shopping_list.v1.ShoppingListService.DeleteItem:input_type -> shopping_list.v1.DeleteItemRequest
-	9,  // 28: shopping_list.v1.ShoppingListService.GetShoppingList:input_type -> shopping_list.v1.GetShoppingListRequest
-	22, // 29: shopping_list.v1.ShoppingListService.GetShoppingLists:input_type -> google.protobuf.Empty
-	3,  // 30: shopping_list.v1.ShoppingListService.CreateShoppingList:input_type -> shopping_list.v1.CreateShoppingListRequest
-	5,  // 31: shopping_list.v1.ShoppingListService.UpdateShoppingList:input_type -> shopping_list.v1.UpdateShoppingListRequest
-	7,  // 32: shopping_list.v1.ShoppingListService.DeleteShoppingList:input_type -> shopping_list.v1.DeleteShoppingListRequest
-	20, // 33: shopping_list.v1.ShoppingListService.GetItem:output_type -> shopping_list.v1.GetItemResponse
-	18, // 34: shopping_list.v1.ShoppingListService.GetItems:output_type -> shopping_list.v1.GetItemsResponse
-	13, // 35: shopping_list.v1.ShoppingListService.CreateItem:output_type -> shopping_list.v1.CreateItemResponse
-	15, // 36: shopping_list.v1.ShoppingListService.UpdateItem:output_type -> shopping_list.v1.UpdateItemResponse
-	17, // 37: shopping_list.v1.ShoppingListService.DeleteItem:output_type -> shopping_list.v1.DeleteItemResponse
-	10, // 38: shopping_list.v1.ShoppingListService.GetShoppingList:output_type -> shopping_list.v1.GetShoppingListResponse
-	11, // 39: shopping_list.v1.ShoppingListService.GetShoppingLists:output_type -> shopping_list.v1.GetShoppingListsResponse
-	4,  // 40: shopping_list.v1.ShoppingListService.CreateShoppingList:output_type -> shopping_list.v1.CreateShoppingListResponse
-	6,  // 41: shopping_list.v1.ShoppingListService.UpdateShoppingList:output_type -> shopping_list.v1.UpdateShoppingListResponse
-	8,  // 42: shopping_list.v1.ShoppingListService.DeleteShoppingList:output_type -> shopping_list.v1.DeleteShoppingListResponse
-	33, // [33:43] is the sub-list for method output_type
-	23, // [23:33] is the sub-list for method input_type
-	23, // [23:23] is the sub-list for extension type_name
-	23, // [23:23] is the sub-list for extension extendee
-	0,  // [0:23] is the sub-list for field type_name
+	2,  // 23: shopping_list.v1.GetItemsByShoppingListIdResponse.items:type_name -> shopping_list.v1.Item
+	19, // 24: shopping_list.v1.ShoppingListService.GetItem:input_type -> shopping_list.v1.GetItemRequest
+	23, // 25: shopping_list.v1.ShoppingListService.GetItems:input_type -> google.protobuf.Empty
+	12, // 26: shopping_list.v1.ShoppingListService.CreateItem:input_type -> shopping_list.v1.CreateItemRequest
+	14, // 27: shopping_list.v1.ShoppingListService.UpdateItem:input_type -> shopping_list.v1.UpdateItemRequest
+	16, // 28: shopping_list.v1.ShoppingListService.DeleteItem:input_type -> shopping_list.v1.DeleteItemRequest
+	9,  // 29: shopping_list.v1.ShoppingListService.GetShoppingList:input_type -> shopping_list.v1.GetShoppingListRequest
+	23, // 30: shopping_list.v1.ShoppingListService.GetShoppingLists:input_type -> google.protobuf.Empty
+	3,  // 31: shopping_list.v1.ShoppingListService.CreateShoppingList:input_type -> shopping_list.v1.CreateShoppingListRequest
+	5,  // 32: shopping_list.v1.ShoppingListService.UpdateShoppingList:input_type -> shopping_list.v1.UpdateShoppingListRequest
+	7,  // 33: shopping_list.v1.ShoppingListService.DeleteShoppingList:input_type -> shopping_list.v1.DeleteShoppingListRequest
+	23, // 34: shopping_list.v1.ShoppingListService.GetItemsByShoppingListId:input_type -> google.protobuf.Empty
+	20, // 35: shopping_list.v1.ShoppingListService.GetItem:output_type -> shopping_list.v1.GetItemResponse
+	18, // 36: shopping_list.v1.ShoppingListService.GetItems:output_type -> shopping_list.v1.GetItemsResponse
+	13, // 37: shopping_list.v1.ShoppingListService.CreateItem:output_type -> shopping_list.v1.CreateItemResponse
+	15, // 38: shopping_list.v1.ShoppingListService.UpdateItem:output_type -> shopping_list.v1.UpdateItemResponse
+	17, // 39: shopping_list.v1.ShoppingListService.DeleteItem:output_type -> shopping_list.v1.DeleteItemResponse
+	10, // 40: shopping_list.v1.ShoppingListService.GetShoppingList:output_type -> shopping_list.v1.GetShoppingListResponse
+	11, // 41: shopping_list.v1.ShoppingListService.GetShoppingLists:output_type -> shopping_list.v1.GetShoppingListsResponse
+	4,  // 42: shopping_list.v1.ShoppingListService.CreateShoppingList:output_type -> shopping_list.v1.CreateShoppingListResponse
+	6,  // 43: shopping_list.v1.ShoppingListService.UpdateShoppingList:output_type -> shopping_list.v1.UpdateShoppingListResponse
+	8,  // 44: shopping_list.v1.ShoppingListService.DeleteShoppingList:output_type -> shopping_list.v1.DeleteShoppingListResponse
+	21, // 45: shopping_list.v1.ShoppingListService.GetItemsByShoppingListId:output_type -> shopping_list.v1.GetItemsByShoppingListIdResponse
+	35, // [35:46] is the sub-list for method output_type
+	24, // [24:35] is the sub-list for method input_type
+	24, // [24:24] is the sub-list for extension type_name
+	24, // [24:24] is the sub-list for extension extendee
+	0,  // [0:24] is the sub-list for field type_name
 }
 
 func init() { file_api_grpc_v1_shopping_list_proto_init() }
@@ -1452,7 +1501,7 @@ func file_api_grpc_v1_shopping_list_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_grpc_v1_shopping_list_proto_rawDesc), len(file_api_grpc_v1_shopping_list_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   20,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
