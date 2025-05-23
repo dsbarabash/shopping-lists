@@ -14,4 +14,3 @@ CREATE TABLE IF NOT EXISTS lists (
 -- +goose StatementBegin
 DROP TABLE IF EXISTS lists;
 -- +goose StatementEnd
-jdbc:postgresql://localhost:5432/postgres
