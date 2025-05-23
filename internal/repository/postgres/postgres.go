@@ -127,10 +127,9 @@ func (p *PostgresDb) GetSls(ctx context.Context) ([]*model.ShoppingList, error) 
 
 func (p *PostgresDb) UpdateSl(ctx context.Context, id string, sl *model.ShoppingList) error {
 	log.Println(sl)
-	sqlCreatedAt := sql.NullTime{Time: sl.CreatedAt.AsTime(), Valid: true}
-	sqlUpdatedAt := sql.NullTime{Time: sl.CreatedAt.AsTime(), Valid: true}
-	query := `UPDATE lists SET title=$1, user_id=$2, created_at=$3, updated_at=$4, state=$5 WHERE id=$6`
-	_, err := p.db.ExecContext(ctx, query, sl.Title, sl.UserId, sqlCreatedAt, sqlUpdatedAt, sl.State, id)
+	sqlUpdatedAt := sql.NullTime{Time: sl.UpdatedAt.AsTime(), Valid: true}
+	query := `UPDATE lists SET title=$1, user_id=$2, updated_at=$3, state=$4 WHERE id=$5`
+	_, err := p.db.ExecContext(ctx, query, sl.Title, sl.UserId, &sqlUpdatedAt, sl.State, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Println(err)
 		return repository.ErrNotFound
@@ -241,10 +240,9 @@ func (p *PostgresDb) GetItems(ctx context.Context) ([]*model.Item, error) {
 }
 
 func (p *PostgresDb) UpdateItem(ctx context.Context, id string, item *model.Item) error {
-	sqlCreatedAt := sql.NullTime{Time: item.CreatedAt.AsTime(), Valid: true}
-	sqlUpdatedAt := sql.NullTime{Time: item.CreatedAt.AsTime(), Valid: true}
-	query := `UPDATE items SET title=$1, comment=$2, is_done=$3, user_id=$4, created_at=$5, updated_at=$6  where id=$7`
-	_, err := p.db.ExecContext(ctx, query, item.Title, item.Comment, item.IsDone, item.UserId, sqlCreatedAt, sqlUpdatedAt, id)
+	sqlUpdatedAt := sql.NullTime{Time: item.UpdatedAt.AsTime(), Valid: true}
+	query := `UPDATE items SET title=$1, comment=$2, is_done=$3, user_id=$4, updated_at=$5  where id=$6`
+	_, err := p.db.ExecContext(ctx, query, item.Title, item.Comment, item.IsDone, item.UserId, sqlUpdatedAt, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Println(err)
 		return repository.ErrNotFound
