@@ -21,8 +21,9 @@ type PostgresDb struct {
 }
 
 func ConnectPostgresDb() (*PostgresDb, error) {
+	cfg := config.NewPostgresConfig()
 	ctx := context.Background()
-	dsn := "postgres://postgres:postgres@localhost:5432/shopping_lists_db?sslmode=disable"
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/shopping_lists_db?sslmode=disable", cfg.Username, cfg.Password, cfg.Host, cfg.Port)
 	sqlDb, err := sql.Open("pgx", dsn)
 	if err != nil {
 		log.Println("Failed to connect to postgres: %v", err)

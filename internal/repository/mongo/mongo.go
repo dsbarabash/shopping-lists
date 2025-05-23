@@ -3,6 +3,7 @@ package mongo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/config"
 	"github.com/dsbarabash/shopping-lists/internal/model"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
@@ -24,7 +25,8 @@ type MongoDb struct {
 func ConnectMongoDb() (*MongoDb, error) {
 	ctx := context.Background()
 	// Подключение к MongoDB
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	cfg := config.NewMongoConfig()
+	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", cfg.Host, cfg.Port))
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		log.Fatalf("Failed to connect to mongodb: ", err)

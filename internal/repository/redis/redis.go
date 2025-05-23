@@ -2,16 +2,19 @@ package redis
 
 import (
 	"context"
+	"fmt"
+	"github.com/dsbarabash/shopping-lists/internal/config"
 	"github.com/go-redis/redis/v8"
 	"log"
 )
 
 func ConnectRedisDb() (*redis.Client, error) {
 	ctx := context.Background()
+	cfg := config.NewRedisConfig()
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379", // Адрес и порт Redis-сервера
-		Password: "",               // Пароль (если есть)
-		DB:       0,                // Номер базы данных
+		Addr:     fmt.Sprintf("%s:%s", cfg.Host, cfg.Port), // Адрес и порт Redis-сервера
+		Password: "",                                       // Пароль (если есть)
+		DB:       0,                                        // Номер базы данных
 	})
 
 	// Проверка соединения
