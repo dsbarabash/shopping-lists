@@ -29,14 +29,14 @@ func ConnectMongoDb() (*MongoDb, error) {
 	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", cfg.Host, cfg.Port))
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		log.Fatalf("Failed to connect to mongodb: ", err)
+		log.Fatalf("Failed to connect to mongodb: %s", err)
 		return nil, err
 	}
 
 	// Пинг сервера для проверки соединения
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		log.Fatalf("Failed to connect to mongodb: ", err)
+		log.Fatalf("Failed to connect to mongodb: %s", err)
 		return nil, err
 	}
 
