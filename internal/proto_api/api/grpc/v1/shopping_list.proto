@@ -46,6 +46,8 @@ service ShoppingListService {
   rpc CreateShoppingList (CreateShoppingListRequest) returns (CreateShoppingListResponse);
   rpc UpdateShoppingList (UpdateShoppingListRequest) returns (UpdateShoppingListResponse);
   rpc DeleteShoppingList (DeleteShoppingListRequest) returns (DeleteShoppingListResponse);
+
+  rpc GetItemsByShoppingListId (google.protobuf.Empty) returns (GetItemsByShoppingListIdResponse);
 }
 
 message CreateShoppingListRequest {
@@ -142,4 +144,8 @@ message GetItemRequest {
 
 message GetItemResponse {
   Item item = 1;
+}
+
+message GetItemsByShoppingListIdResponse{
+  repeated Item items = 1;
 }

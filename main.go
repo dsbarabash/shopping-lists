@@ -4,27 +4,42 @@ import (
 	"context"
 	"github.com/dsbarabash/shopping-lists/internal/app"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
-	"github.com/dsbarabash/shopping-lists/internal/repository/mongo"
+	"github.com/dsbarabash/shopping-lists/internal/repository/postgres"
+	"github.com/dsbarabash/shopping-lists/internal/repository/redis"
 	"github.com/dsbarabash/shopping-lists/internal/service"
 	"log"
 )
 
 func main() {
-	MongoDb, err := mongo.ConnectMongoDb()
-	if err != nil {
-		log.Fatal(err)
-	}
-	RedisDB, err := mongo.ConnectRedisDb()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//MongoDb, err := mongo.ConnectMongoDb()
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	RedisDB, err := redis.ConnectRedisDb()
 	if err != nil {
 		log.Fatal(err)
 	}
 	logWriter := repository.NewLogWriter(RedisDB)
 	log.SetOutput(logWriter)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	Service, err := service.NewService(MongoDb)
-	UserService, err := service.NewUserService(MongoDb)
+	PostgresDB, err := postgres.ConnectPostgresDb()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err = PostgresDB.Close(); err != nil {
+			log.Fatal("cannot close psql connection", err)
+		}
+	}()
+	if err = PostgresDB.Migrate(ctx, "db/migrations"); err != nil {
+		log.Fatal(err)
+	}
+
+	Service, err := service.NewService(PostgresDB)
+	UserService, err := service.NewUserService(PostgresDB)
 	newApp, err := app.NewService(ctx, Service, UserService)
 	if err != nil {
 		log.Fatal(err)

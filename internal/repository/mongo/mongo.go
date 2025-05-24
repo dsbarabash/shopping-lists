@@ -3,10 +3,10 @@ package mongo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/dsbarabash/shopping-lists/internal/config"
 	"github.com/dsbarabash/shopping-lists/internal/model"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
-	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -22,35 +22,21 @@ type MongoDb struct {
 	UserCollection         *mongo.Collection
 }
 
-func ConnectRedisDb() (*redis.Client, error) {
-	ctx := context.Background()
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379", // Адрес и порт Redis-сервера
-		Password: "",               // Пароль (если есть)
-		DB:       0,                // Номер базы данных
-	})
-
-	// Проверка соединения
-	_, err := client.Ping(ctx).Result()
-	if err != nil {
-		return nil, err
-	}
-	log.Println("Connected to redis")
-	return client, nil
-}
-
 func ConnectMongoDb() (*MongoDb, error) {
 	ctx := context.Background()
 	// Подключение к MongoDB
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	cfg := config.NewMongoConfig()
+	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", cfg.Host, cfg.Port))
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
+		log.Fatalf("Failed to connect to mongodb: %s", err)
 		return nil, err
 	}
 
 	// Пинг сервера для проверки соединения
 	err = client.Ping(ctx, nil)
 	if err != nil {
+		log.Fatalf("Failed to connect to mongodb: %s", err)
 		return nil, err
 	}
 
@@ -109,14 +95,14 @@ func (m *MongoDb) GetSls(ctx context.Context) ([]*model.ShoppingList, error) {
 		log.Println(err)
 		return nil, err
 	}
-	var ls []*model.ShoppingList
-	err = lists.All(ctx, &ls)
+	var sl []*model.ShoppingList
+	err = lists.All(ctx, &sl)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
-	log.Println("Get shopping lists: ", ls)
-	return ls, nil
+	log.Println("Get shopping lists: ", sl)
+	return sl, nil
 }
 
 func (m *MongoDb) UpdateSl(ctx context.Context, id string, sl *model.ShoppingList) error {
@@ -264,6 +250,22 @@ func (m *MongoDb) DeleteItemById(ctx context.Context, id string) error {
 	}
 	log.Println("Delete item: ", ls[0])
 	return nil
+}
+
+func (m *MongoDb) GetItemsBySLId(ctx context.Context, ShoppingListId string) ([]*model.Item, error) {
+	items, err := m.ItemCollection.Find(ctx, bson.D{primitive.E{Key: "shopping_list_id", Value: ShoppingListId}})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	var ls []*model.Item
+	err = items.All(ctx, &ls)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	log.Println("Get items: ", ls)
+	return ls, nil
 }
 
 func (m *MongoDb) CreateUser(ctx context.Context, user *model.User) error {
