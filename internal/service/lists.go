@@ -70,7 +70,7 @@ func (s *service) UpdateShoppingList(ctx context.Context, id string, dto *model.
 	if dto.Title == "" && len(dto.Items) == 0 && dto.UserId == "" {
 		return status.Errorf(codes.InvalidArgument, "nothing to update")
 	}
-	_, err := s.repository.GetSlById(ctx, id)
+	findList, err := s.repository.GetSlById(ctx, id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return status.Errorf(codes.NotFound, err.Error())
@@ -78,7 +78,7 @@ func (s *service) UpdateShoppingList(ctx context.Context, id string, dto *model.
 			return status.Errorf(codes.Internal, err.Error())
 		}
 	}
-	if dto.State == 1 {
+	if findList.State == 1 && dto.State != 2 {
 		return status.Errorf(codes.InvalidArgument, "impossible to update archived lists")
 	}
 	sl := model.UpdateShoppingList(dto)
