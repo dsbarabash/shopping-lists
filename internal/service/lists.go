@@ -78,6 +78,9 @@ func (s *service) UpdateShoppingList(ctx context.Context, id string, dto *model.
 			return status.Errorf(codes.Internal, err.Error())
 		}
 	}
+	if dto.State == 1 {
+		return status.Errorf(codes.InvalidArgument, "impossible to update archived lists")
+	}
 	sl := model.UpdateShoppingList(dto)
 	err = s.repository.UpdateSl(ctx, id, sl)
 	if err != nil {
