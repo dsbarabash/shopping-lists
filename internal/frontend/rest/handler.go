@@ -243,7 +243,7 @@ func (s *RestServer) AddShoppingList(w http.ResponseWriter, r *http.Request) {
 	sl.CreatedAt = timestamppb.Now()
 	sl.UpdatedAt = timestamppb.Now()
 	sl.Items = make([]string, 0)
-	sl.State = 1
+	sl.State = 2
 	err = s.Service.CreateShoppingList(r.Context(), &sl)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
