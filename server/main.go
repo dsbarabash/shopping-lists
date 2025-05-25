@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	Service, err := service.NewService(MongoDb)
+	Service, err := service.NewListService(MongoDb)
 	logWriter := repository.NewLogWriter(RedisDB)
 	log.SetOutput(logWriter)
 
