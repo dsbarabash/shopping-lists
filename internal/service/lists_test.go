@@ -36,7 +36,7 @@ func TestNewService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewService(tt.args.repository)
+			got, err := NewListService(tt.args.repository)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewService() error = %v, wantErr %v", err, tt.wantErr)
 				return
