@@ -27,7 +27,7 @@ type Service interface {
 	GetItemsByShoppingListId(ctx context.Context, id string) ([]*model.Item, error)
 }
 
-func NewService(repository repository.Db) (Service, error) {
+func NewListService(repository repository.Db) (Service, error) {
 	return &service{
 		repository: repository,
 	}, nil

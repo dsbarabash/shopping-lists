@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/dsbarabash/shopping-lists/internal/app"
+	"github.com/dsbarabash/shopping-lists/internal/frontend/rest"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/dsbarabash/shopping-lists/internal/repository/postgres"
 	"github.com/dsbarabash/shopping-lists/internal/repository/redis"
@@ -38,13 +38,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	Service, err := service.NewService(PostgresDB)
+	ListService, err := service.NewListService(PostgresDB)
 	UserService, err := service.NewUserService(PostgresDB)
-	newApp, err := app.NewService(ctx, Service, UserService)
+	newRestService, err := rest.NewRestService(ctx, ListService, UserService)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = newApp.Start()
+	err = newRestService.Start()
 	if err != nil {
 		log.Fatal(err)
 	}

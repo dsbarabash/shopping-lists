@@ -1,22 +1,108 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/dsbarabash/shopping-lists/internal/config"
 	"github.com/dsbarabash/shopping-lists/internal/model"
 	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"github.com/dsbarabash/shopping-lists/internal/service"
 	_ "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"io"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 type RestServer struct {
+	cfg         *config.Config
+	ctx         context.Context
 	Service     service.Service
 	UserService service.UserService
+}
+
+func NewRestService(ctx context.Context, service service.Service, userService service.UserService) (*RestServer, error) {
+	return &RestServer{
+		ctx:         ctx,
+		cfg:         config.NewConfig(),
+		Service:     service,
+		UserService: userService,
+	}, nil
+}
+
+func (s *RestServer) Start() error {
+	ctx, stop := signal.NotifyContext(s.ctx, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+	defer stop()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /registration", func(w http.ResponseWriter, r *http.Request) {
+		s.Registration(w, r)
+	})
+	mux.HandleFunc("POST /login", func(w http.ResponseWriter, r *http.Request) {
+		s.Login(w, r)
+	})
+	mux.HandleFunc("POST /api/item", func(w http.ResponseWriter, r *http.Request) {
+		UserIdentity(w, r, s.AddItem)
+	})
+	mux.HandleFunc("GET /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
+		UserIdentity(w, r, s.GetItemById)
+	})
+	mux.HandleFunc("GET /api/items", func(w http.ResponseWriter, r *http.Request) {
+		UserIdentity(w, r, s.GetItems)
+	})
+	mux.HandleFunc("PUT /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
+		UserIdentity(w, r, s.UpdateItemById)
+	})
+	mux.HandleFunc("DELETE /api/item/{id}", func(w http.ResponseWriter, r *http.Request) {
+		UserIdentity(w, r, s.DeleteItemById)
+	})
+	mux.HandleFunc("POST /api/shopping_list", func(w http.ResponseWriter, r *http.Request) {
+		UserIdentity(w, r, s.AddShoppingList)
+	})
+	mux.HandleFunc("GET /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
+		UserIdentity(w, r, s.GetShoppingListById)
+	})
+	mux.HandleFunc("GET /api/shopping_lists", func(w http.ResponseWriter, r *http.Request) {
+		UserIdentity(w, r, s.GetShoppingLists)
+	})
+	mux.HandleFunc("PUT /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
+		UserIdentity(w, r, s.UpdateShoppingListById)
+	})
+	mux.HandleFunc("DELETE /api/shopping_list/{id}", func(w http.ResponseWriter, r *http.Request) {
+		UserIdentity(w, r, s.DeleteShoppingListById)
+	})
+	mux.HandleFunc("GET /api/shopping_list_items/{id}", func(w http.ResponseWriter, r *http.Request) {
+		UserIdentity(w, r, s.GetItemsByShoppingListId)
+	})
+
+	serverHTTP := &http.Server{
+		Addr:    fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port),
+		Handler: mux,
+	}
+
+	go func() {
+		if err := serverHTTP.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	<-ctx.Done()
+	log.Println("got interruption signal")
+	ctxT, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+	if err := serverHTTP.Shutdown(ctxT); err != nil {
+		return fmt.Errorf("shutdown server: %s\n", err)
+	}
+	log.Println("FINAL server shutdown")
+	return nil
 }
 
 // Registration
