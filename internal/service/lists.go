@@ -7,6 +7,7 @@ import (
 	"github.com/dsbarabash/shopping-lists/internal/repository"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type service struct {
@@ -81,6 +82,7 @@ func (s *service) UpdateShoppingList(ctx context.Context, id string, dto *model.
 	if findList.State == 1 && dto.State != 2 {
 		return status.Errorf(codes.InvalidArgument, "impossible to update archived lists")
 	}
+	dto.UpdatedAt = timestamppb.Now()
 	sl := model.UpdateShoppingList(dto)
 	err = s.repository.UpdateSl(ctx, id, sl)
 	if err != nil {
@@ -154,6 +156,7 @@ func (s *service) UpdateItem(ctx context.Context, id string, dto *model.UpdateIt
 			return status.Errorf(codes.Internal, err.Error())
 		}
 	}
+	dto.UpdatedAt = timestamppb.Now()
 	i := model.UpdateItem(dto)
 	err = s.repository.UpdateItem(ctx, id, i)
 	if err != nil {

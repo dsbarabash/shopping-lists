@@ -360,7 +360,6 @@ func (s *RestServer) UpdateShoppingListById(w http.ResponseWriter, r *http.Reque
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	sl.UpdatedAt = timestamppb.Now()
 	err = s.Service.UpdateShoppingList(r.Context(), id, sl)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
@@ -565,7 +564,6 @@ func (s *RestServer) UpdateItemById(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	item.UpdatedAt = timestamppb.Now()
 	err = s.Service.UpdateItem(r.Context(), id, item)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
