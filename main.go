@@ -8,24 +8,25 @@ import (
 	"github.com/dsbarabash/shopping-lists/internal/repository/redis"
 	"github.com/dsbarabash/shopping-lists/internal/service"
 	"log"
+	"time"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	//MongoDb, err := mongo.ConnectMongoDb()
+	//MongoDb, err := mongo.ConnectMongoDbWithRetries(5, 5*time.Second)
 	//if err != nil {
 	//	log.Fatal(err)
 	//}
-	RedisDB, err := redis.ConnectRedisDb()
+	RedisDB, err := redis.ConnectRedisDbWithRetries(5, 5*time.Second)
 	if err != nil {
 		log.Fatal(err)
 	}
 	logWriter := repository.NewLogWriter(RedisDB)
 	log.SetOutput(logWriter)
 
-	PostgresDB, err := postgres.ConnectPostgresDb()
+	PostgresDB, err := postgres.ConnectPostgresDbWithRetries(5, 5*time.Second)
 	if err != nil {
 		log.Fatal(err)
 	}

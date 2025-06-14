@@ -60,6 +60,49 @@ func ConnectMongoDb() (*MongoDb, error) {
 	}, nil
 }
 
+func ConnectMongoDbWithRetries(maxAttempts int, delay time.Duration) (*MongoDb, error) {
+	var client *mongo.Client
+	var err error
+	ctx := context.Background()
+	cfg := config.NewMongoConfig()
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", cfg.Host, cfg.Port))
+		client, err = mongo.Connect(ctx, clientOptions)
+
+		if err != nil {
+			log.Printf("Attempt %d: connection error: %v", attempt, err)
+			time.Sleep(delay)
+			continue
+		}
+		err = client.Ping(ctx, nil)
+		if err != nil {
+			log.Printf("Successfully connected after %d attempts", attempt)
+			// Создание или переключение на базу данных
+			dbName := "shopping_lists_db"
+			db := client.Database(dbName)
+			// Создание коллекции
+			shoppingListCollection := db.Collection("lists")
+
+			itemCollection := db.Collection("items")
+
+			userCollection := db.Collection("users")
+			log.Println("Connected to mongodb")
+
+			return &MongoDb{
+				ShoppingListCollection: shoppingListCollection,
+				ItemCollection:         itemCollection,
+				UserCollection:         userCollection,
+			}, nil
+		}
+		log.Printf("Attempt %d: ping failed: %v", attempt, err)
+		time.Sleep(delay)
+
+	}
+
+	return nil, err
+}
+
 func (m *MongoDb) GetSlById(ctx context.Context, id string) (*model.ShoppingList, error) {
 	items, err := m.ShoppingListCollection.Find(ctx, bson.D{primitive.E{Key: "id", Value: id}})
 	if err != nil {

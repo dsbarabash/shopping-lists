@@ -20,6 +20,11 @@ services:
     volumes:
       - postgres_data:/data
 
+  shopping-list-app:
+    build: .
+    ports:
+      - "8989:8989"
+
 volumes:
   mongodb_data:
   redis_data:

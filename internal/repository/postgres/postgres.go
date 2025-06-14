@@ -37,6 +37,35 @@ func ConnectPostgresDb() (*PostgresDb, error) {
 	return &PostgresDb{db: sqlDb}, nil
 }
 
+func ConnectPostgresDbWithRetries(maxAttempts int, delay time.Duration) (*PostgresDb, error) {
+	var db *sql.DB
+	var err error
+	cfg := config.NewPostgresConfig()
+	ctx := context.Background()
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/shopping_lists_db?sslmode=disable", cfg.Username, cfg.Password, cfg.Host, cfg.Port)
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		db, err = sql.Open("pgx", dsn)
+		if err != nil {
+			log.Printf("Attempt %d: connection error: %v", attempt, err)
+			time.Sleep(delay)
+			continue
+		}
+
+		err = db.PingContext(ctx)
+		if err == nil {
+			log.Printf("Successfully connected after %d attempts", attempt)
+			return &PostgresDb{db: db}, nil
+		}
+
+		log.Printf("Attempt %d: ping failed: %v", attempt, err)
+		db.Close()
+		time.Sleep(delay)
+	}
+
+	return nil, err
+}
+
 func (p *PostgresDb) Migrate(ctx context.Context, migrate string) (err error) {
 	//	goose.SetBaseFS(embedMigrations)
 
@@ -129,6 +158,9 @@ func (p *PostgresDb) GetSls(ctx context.Context) ([]*model.ShoppingList, error) 
 func (p *PostgresDb) UpdateSl(ctx context.Context, id string, sl *model.ShoppingList) error {
 	log.Println(sl)
 	sqlUpdatedAt := sql.NullTime{Time: sl.UpdatedAt.AsTime(), Valid: true}
+	if sl.Title != "" {
+
+	}
 	query := `UPDATE lists SET title=$1, user_id=$2, updated_at=$3, state=$4 WHERE id=$5`
 	_, err := p.db.ExecContext(ctx, query, sl.Title, sl.UserId, sqlUpdatedAt, sl.State, id)
 	if errors.Is(err, sql.ErrNoRows) {
