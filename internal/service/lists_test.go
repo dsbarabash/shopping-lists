@@ -16,6 +16,8 @@ func TestNewService(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockService := repository.NewMockDb(ctrl)
+	mockTimeNower := repository.NewTimeNower()
+	mockIder := repository.NewIder()
 	type args struct {
 		repository repository.Db
 	}
@@ -30,6 +32,8 @@ func TestNewService(t *testing.T) {
 			args{mockService},
 			&service{
 				repository: mockService,
+				timeNower:  mockTimeNower,
+				ider:       mockIder,
 			},
 			false,
 		},
@@ -56,13 +60,10 @@ func Test_service_CreateItem(t *testing.T) {
 	ID, _ := uuid.NewUUID()
 	timeNow := timestamppb.Now()
 	var createItemDTO = &model.CreateItemDTO{
-		Id:             ID.String(),
 		Title:          "Test New Item",
 		Comment:        "test comment",
 		IsDone:         false,
 		UserId:         "12345",
-		CreatedAt:      timeNow,
-		UpdatedAt:      timeNow,
 		ShoppingListId: "4321",
 	}
 	var item = &model.Item{
@@ -79,13 +80,15 @@ func Test_service_CreateItem(t *testing.T) {
 		name    string
 		args    args
 		wantErr bool
-		prepare func(mockService *repository.MockDb)
+		prepare func(mockService *repository.MockDb, mockTime *repository.MockTimeNower, mockId *repository.MockIder)
 	}{
 		{
 			"Valid",
 			args{context.Background(), createItemDTO},
 			false,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, mockTime *repository.MockTimeNower, mockId *repository.MockIder) {
+				mockId.EXPECT().Id().Return(ID.String(), nil).Times(1)
+				mockTime.EXPECT().Now().Return(timeNow).Times(1)
 				mockService.EXPECT().AddItem(context.Background(), item).Return(nil).Times(1)
 			},
 		},
@@ -93,7 +96,9 @@ func Test_service_CreateItem(t *testing.T) {
 			"InValidErrInternal",
 			args{context.Background(), createItemDTO},
 			true,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, mockTime *repository.MockTimeNower, mockId *repository.MockIder) {
+				mockId.EXPECT().Id().Return(ID.String(), nil).Times(1)
+				mockTime.EXPECT().Now().Return(timeNow).Times(1)
 				mockService.EXPECT().AddItem(context.Background(), item).Return(io.EOF).Times(1)
 			},
 		},
@@ -103,10 +108,14 @@ func Test_service_CreateItem(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockService := repository.NewMockDb(ctrl)
+			timeService := repository.NewMockTimeNower(ctrl)
+			idService := repository.NewMockIder(ctrl)
 			s := &service{
 				repository: mockService,
+				timeNower:  timeService,
+				ider:       idService,
 			}
-			tt.prepare(mockService)
+			tt.prepare(mockService, timeService, idService)
 			if err := s.CreateItem(tt.args.ctx, tt.args.dto); (err != nil) != tt.wantErr {
 				t.Errorf("CreateItem() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -287,6 +296,7 @@ func Test_service_UpdateItem(t *testing.T) {
 		UpdatedAt:      timeNow,
 		ShoppingListId: "4321",
 	}
+	updatedTime := timestamppb.Now()
 	var updateItemDTO = &model.UpdateItemDTO{
 		Id:             ID.String(),
 		Title:          "Updated Test New Item",
@@ -294,6 +304,7 @@ func Test_service_UpdateItem(t *testing.T) {
 		IsDone:         false,
 		UserId:         "123456",
 		CreatedAt:      timeNow,
+		UpdatedAt:      updatedTime,
 		ShoppingListId: "4321",
 	}
 	updateItem := model.UpdateItem(updateItemDTO)
@@ -301,15 +312,15 @@ func Test_service_UpdateItem(t *testing.T) {
 		name    string
 		args    args
 		wantErr bool
-		prepare func(mockService *repository.MockDb)
+		prepare func(mockService *repository.MockDb, timeMock *repository.MockTimeNower)
 	}{
 		{
 			"Valid",
 			args{context.Background(), ID.String(), updateItemDTO},
 			false,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, timeMock *repository.MockTimeNower) {
 				mockService.EXPECT().GetItemById(context.Background(), ID.String()).Return(item, nil).Times(1)
-				updateItem.UpdatedAt = timestamppb.Now()
+				timeMock.EXPECT().Now().Return(updatedTime).Times(1)
 				mockService.EXPECT().UpdateItem(context.Background(), ID.String(), updateItem).Return(nil).Times(1)
 			},
 		},
@@ -317,14 +328,14 @@ func Test_service_UpdateItem(t *testing.T) {
 			"InvalidEmptyParameters",
 			args{context.Background(), ID.String(), &model.UpdateItemDTO{}},
 			true,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, timeMock *repository.MockTimeNower) {
 			},
 		},
 		{
 			"InvalidErrNotFoundGet",
 			args{context.Background(), ID.String(), updateItemDTO},
 			true,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, timeMock *repository.MockTimeNower) {
 				mockService.EXPECT().GetItemById(context.Background(), ID.String()).Return(nil, repository.ErrNotFound).Times(1)
 			},
 		},
@@ -332,7 +343,7 @@ func Test_service_UpdateItem(t *testing.T) {
 			"InvalidErrInternalGet",
 			args{context.Background(), ID.String(), updateItemDTO},
 			true,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, timeMock *repository.MockTimeNower) {
 				mockService.EXPECT().GetItemById(context.Background(), ID.String()).Return(nil, io.EOF).Times(1)
 			},
 		},
@@ -340,9 +351,9 @@ func Test_service_UpdateItem(t *testing.T) {
 			"InvalidErrNotFoundUpdate",
 			args{context.Background(), ID.String(), updateItemDTO},
 			true,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, timeMock *repository.MockTimeNower) {
 				mockService.EXPECT().GetItemById(context.Background(), ID.String()).Return(item, nil).Times(1)
-				updateItem.UpdatedAt = timestamppb.Now()
+				timeMock.EXPECT().Now().Return(updatedTime).Times(1)
 				mockService.EXPECT().UpdateItem(context.Background(), ID.String(), updateItem).Return(repository.ErrNotFound).Times(1)
 			},
 		},
@@ -350,9 +361,9 @@ func Test_service_UpdateItem(t *testing.T) {
 			"InvalidErrInternalUpdate",
 			args{context.Background(), ID.String(), updateItemDTO},
 			true,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, timeMock *repository.MockTimeNower) {
 				mockService.EXPECT().GetItemById(context.Background(), ID.String()).Return(item, nil).Times(1)
-				updateItem.UpdatedAt = timestamppb.Now()
+				timeMock.EXPECT().Now().Return(updatedTime).Times(1)
 				mockService.EXPECT().UpdateItem(context.Background(), ID.String(), updateItem).Return(io.EOF).Times(1)
 			},
 		},
@@ -362,10 +373,12 @@ func Test_service_UpdateItem(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockService := repository.NewMockDb(ctrl)
+			timeService := repository.NewMockTimeNower(ctrl)
 			s := &service{
 				repository: mockService,
+				timeNower:  timeService,
 			}
-			tt.prepare(mockService)
+			tt.prepare(mockService, timeService)
 			if err := s.UpdateItem(tt.args.ctx, tt.args.id, tt.args.dto); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateItem() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -455,12 +468,9 @@ func Test_service_CreateShoppingList(t *testing.T) {
 	ID, _ := uuid.NewUUID()
 	timeNow := timestamppb.Now()
 	var createSLDTO = &model.CreateShoppingListDTO{
-		Id:        ID.String(),
-		Title:     "Test New SL",
-		UserId:    "12345",
-		CreatedAt: timeNow,
-		UpdatedAt: timeNow,
-		Items:     []string{"234", "567"},
+		Title:  "Test New SL",
+		UserId: "12345",
+		Items:  []string{"234", "567"},
 	}
 	var sl = &model.ShoppingList{
 		Id:        ID.String(),
@@ -468,19 +478,22 @@ func Test_service_CreateShoppingList(t *testing.T) {
 		UserId:    "12345",
 		CreatedAt: timeNow,
 		UpdatedAt: timeNow,
+		State:     2,
 		Items:     []string{"234", "567"},
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
-		prepare func(mockService *repository.MockDb)
+		prepare func(mockService *repository.MockDb, mockTime *repository.MockTimeNower, mockId *repository.MockIder)
 	}{
 		{
 			"Valid",
 			args{context.Background(), createSLDTO},
 			false,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, mockTime *repository.MockTimeNower, mockId *repository.MockIder) {
+				mockId.EXPECT().Id().Return(ID.String(), nil).Times(1)
+				mockTime.EXPECT().Now().Return(timeNow).Times(1)
 				mockService.EXPECT().AddShoppingList(context.Background(), sl).Return(nil).Times(1)
 			},
 		},
@@ -488,7 +501,9 @@ func Test_service_CreateShoppingList(t *testing.T) {
 			"InvalidErrInternal",
 			args{context.Background(), createSLDTO},
 			true,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, mockTime *repository.MockTimeNower, mockId *repository.MockIder) {
+				mockId.EXPECT().Id().Return(ID.String(), nil).Times(1)
+				mockTime.EXPECT().Now().Return(timeNow).Times(1)
 				mockService.EXPECT().AddShoppingList(context.Background(), sl).Return(io.EOF).Times(1)
 			},
 		},
@@ -498,10 +513,14 @@ func Test_service_CreateShoppingList(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockService := repository.NewMockDb(ctrl)
+			timeService := repository.NewMockTimeNower(ctrl)
+			idService := repository.NewMockIder(ctrl)
 			s := &service{
 				repository: mockService,
+				timeNower:  timeService,
+				ider:       idService,
 			}
-			tt.prepare(mockService)
+			tt.prepare(mockService, timeService, idService)
 			if err := s.CreateShoppingList(tt.args.ctx, tt.args.dto); (err != nil) != tt.wantErr {
 				t.Errorf("CreateShoppingList() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -748,12 +767,13 @@ func Test_service_UpdateShoppingList(t *testing.T) {
 		UpdatedAt: timeNow,
 		Items:     []string{"234", "567"},
 	}
+	updatedTime := timestamppb.Now()
 	var updateSlDTO = &model.UpdateShoppingListDTO{
 		Id:        ID.String(),
 		Title:     "Updated Test New SL",
 		UserId:    "123456",
 		CreatedAt: timeNow,
-		UpdatedAt: timestamppb.Now(),
+		UpdatedAt: updatedTime,
 		Items:     []string{"234", "567"},
 	}
 	updateSl := model.UpdateShoppingList(updateSlDTO)
@@ -761,15 +781,15 @@ func Test_service_UpdateShoppingList(t *testing.T) {
 		name    string
 		args    args
 		wantErr bool
-		prepare func(mockService *repository.MockDb)
+		prepare func(mockService *repository.MockDb, mockTime *repository.MockTimeNower)
 	}{
 		{
 			"Valid",
 			args{context.Background(), ID.String(), updateSlDTO},
 			false,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, mockTime *repository.MockTimeNower) {
 				mockService.EXPECT().GetSlById(context.Background(), ID.String()).Return(sl, nil).Times(1)
-				updateSl.UpdatedAt = timestamppb.Now()
+				mockTime.EXPECT().Now().Return(updatedTime).Times(1)
 				mockService.EXPECT().UpdateSl(context.Background(), ID.String(), updateSl).Return(nil).Times(1)
 			},
 		},
@@ -777,14 +797,14 @@ func Test_service_UpdateShoppingList(t *testing.T) {
 			"InvalidEmptyParameters",
 			args{context.Background(), ID.String(), &model.UpdateShoppingListDTO{}},
 			true,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, mockTime *repository.MockTimeNower) {
 			},
 		},
 		{
 			"InvalidErrNotFoundGet",
 			args{context.Background(), ID.String(), updateSlDTO},
 			true,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, mockTime *repository.MockTimeNower) {
 				mockService.EXPECT().GetSlById(context.Background(), ID.String()).Return(nil, repository.ErrNotFound).Times(1)
 			},
 		},
@@ -792,7 +812,7 @@ func Test_service_UpdateShoppingList(t *testing.T) {
 			"InvalidErrInternalGet",
 			args{context.Background(), ID.String(), updateSlDTO},
 			true,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, mockTime *repository.MockTimeNower) {
 				mockService.EXPECT().GetSlById(context.Background(), ID.String()).Return(nil, io.EOF).Times(1)
 			},
 		},
@@ -800,9 +820,9 @@ func Test_service_UpdateShoppingList(t *testing.T) {
 			"InvalidErrNotFoundUpdate",
 			args{context.Background(), ID.String(), updateSlDTO},
 			true,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, mockTime *repository.MockTimeNower) {
 				mockService.EXPECT().GetSlById(context.Background(), ID.String()).Return(sl, nil).Times(1)
-				updateSl.UpdatedAt = timestamppb.Now()
+				mockTime.EXPECT().Now().Return(updatedTime).Times(1)
 				mockService.EXPECT().UpdateSl(context.Background(), ID.String(), updateSl).Return(repository.ErrNotFound).Times(1)
 			},
 		},
@@ -810,9 +830,9 @@ func Test_service_UpdateShoppingList(t *testing.T) {
 			"InvalidErrInternalUpdate",
 			args{context.Background(), ID.String(), updateSlDTO},
 			true,
-			func(mockService *repository.MockDb) {
+			func(mockService *repository.MockDb, mockTime *repository.MockTimeNower) {
 				mockService.EXPECT().GetSlById(context.Background(), ID.String()).Return(sl, nil).Times(1)
-				updateSl.UpdatedAt = timestamppb.Now()
+				mockTime.EXPECT().Now().Return(updatedTime).Times(1)
 				mockService.EXPECT().UpdateSl(context.Background(), ID.String(), updateSl).Return(io.EOF).Times(1)
 			},
 		},
@@ -822,10 +842,12 @@ func Test_service_UpdateShoppingList(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			mockService := repository.NewMockDb(ctrl)
+			timeService := repository.NewMockTimeNower(ctrl)
 			s := &service{
 				repository: mockService,
+				timeNower:  timeService,
 			}
-			tt.prepare(mockService)
+			tt.prepare(mockService, timeService)
 			if err := s.UpdateShoppingList(tt.args.ctx, tt.args.id, tt.args.dto); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateShoppingList() error = %v, wantErr %v", err, tt.wantErr)
 			}
