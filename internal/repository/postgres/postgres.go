@@ -37,6 +37,35 @@ func ConnectPostgresDb() (*PostgresDb, error) {
 	return &PostgresDb{db: sqlDb}, nil
 }
 
+func ConnectPostgresDbWithRetries(maxAttempts int, delay time.Duration) (*PostgresDb, error) {
+	var db *sql.DB
+	var err error
+	cfg := config.NewPostgresConfig()
+	ctx := context.Background()
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/shopping_lists_db?sslmode=disable", cfg.Username, cfg.Password, cfg.Host, cfg.Port)
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		db, err = sql.Open("pgx", dsn)
+		if err != nil {
+			log.Printf("Attempt %d: connection error: %v", attempt, err)
+			time.Sleep(delay)
+			continue
+		}
+
+		err = db.PingContext(ctx)
+		if err == nil {
+			log.Printf("Successfully connected after %d attempts", attempt)
+			return &PostgresDb{db: db}, nil
+		}
+
+		log.Printf("Attempt %d: ping failed: %v", attempt, err)
+		db.Close()
+		time.Sleep(delay)
+	}
+
+	return nil, err
+}
+
 func (p *PostgresDb) Migrate(ctx context.Context, migrate string) (err error) {
 	//	goose.SetBaseFS(embedMigrations)
 
