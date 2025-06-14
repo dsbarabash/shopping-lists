@@ -294,7 +294,6 @@ func Test_service_UpdateItem(t *testing.T) {
 		IsDone:         false,
 		UserId:         "123456",
 		CreatedAt:      timeNow,
-		UpdatedAt:      timestamppb.Now(),
 		ShoppingListId: "4321",
 	}
 	updateItem := model.UpdateItem(updateItemDTO)
@@ -310,6 +309,7 @@ func Test_service_UpdateItem(t *testing.T) {
 			false,
 			func(mockService *repository.MockDb) {
 				mockService.EXPECT().GetItemById(context.Background(), ID.String()).Return(item, nil).Times(1)
+				updateItem.UpdatedAt = timestamppb.Now()
 				mockService.EXPECT().UpdateItem(context.Background(), ID.String(), updateItem).Return(nil).Times(1)
 			},
 		},
@@ -341,7 +341,8 @@ func Test_service_UpdateItem(t *testing.T) {
 			args{context.Background(), ID.String(), updateItemDTO},
 			true,
 			func(mockService *repository.MockDb) {
-				mockService.EXPECT().GetItemById(context.Background(), ID.String()).Return(nil, nil).Times(1)
+				mockService.EXPECT().GetItemById(context.Background(), ID.String()).Return(item, nil).Times(1)
+				updateItem.UpdatedAt = timestamppb.Now()
 				mockService.EXPECT().UpdateItem(context.Background(), ID.String(), updateItem).Return(repository.ErrNotFound).Times(1)
 			},
 		},
@@ -350,7 +351,8 @@ func Test_service_UpdateItem(t *testing.T) {
 			args{context.Background(), ID.String(), updateItemDTO},
 			true,
 			func(mockService *repository.MockDb) {
-				mockService.EXPECT().GetItemById(context.Background(), ID.String()).Return(nil, nil).Times(1)
+				mockService.EXPECT().GetItemById(context.Background(), ID.String()).Return(item, nil).Times(1)
+				updateItem.UpdatedAt = timestamppb.Now()
 				mockService.EXPECT().UpdateItem(context.Background(), ID.String(), updateItem).Return(io.EOF).Times(1)
 			},
 		},
@@ -751,7 +753,7 @@ func Test_service_UpdateShoppingList(t *testing.T) {
 		Title:     "Updated Test New SL",
 		UserId:    "123456",
 		CreatedAt: timeNow,
-		UpdatedAt: timeNow,
+		UpdatedAt: timestamppb.Now(),
 		Items:     []string{"234", "567"},
 	}
 	updateSl := model.UpdateShoppingList(updateSlDTO)
@@ -767,6 +769,7 @@ func Test_service_UpdateShoppingList(t *testing.T) {
 			false,
 			func(mockService *repository.MockDb) {
 				mockService.EXPECT().GetSlById(context.Background(), ID.String()).Return(sl, nil).Times(1)
+				updateSl.UpdatedAt = timestamppb.Now()
 				mockService.EXPECT().UpdateSl(context.Background(), ID.String(), updateSl).Return(nil).Times(1)
 			},
 		},
@@ -798,7 +801,8 @@ func Test_service_UpdateShoppingList(t *testing.T) {
 			args{context.Background(), ID.String(), updateSlDTO},
 			true,
 			func(mockService *repository.MockDb) {
-				mockService.EXPECT().GetSlById(context.Background(), ID.String()).Return(nil, nil).Times(1)
+				mockService.EXPECT().GetSlById(context.Background(), ID.String()).Return(sl, nil).Times(1)
+				updateSl.UpdatedAt = timestamppb.Now()
 				mockService.EXPECT().UpdateSl(context.Background(), ID.String(), updateSl).Return(repository.ErrNotFound).Times(1)
 			},
 		},
@@ -807,7 +811,8 @@ func Test_service_UpdateShoppingList(t *testing.T) {
 			args{context.Background(), ID.String(), updateSlDTO},
 			true,
 			func(mockService *repository.MockDb) {
-				mockService.EXPECT().GetSlById(context.Background(), ID.String()).Return(nil, nil).Times(1)
+				mockService.EXPECT().GetSlById(context.Background(), ID.String()).Return(sl, nil).Times(1)
+				updateSl.UpdatedAt = timestamppb.Now()
 				mockService.EXPECT().UpdateSl(context.Background(), ID.String(), updateSl).Return(io.EOF).Times(1)
 			},
 		},
