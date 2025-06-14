@@ -162,7 +162,7 @@ func (p *PostgresDb) UpdateSl(ctx context.Context, id string, sl *model.Shopping
 
 	}
 	query := `UPDATE lists SET title=$1, user_id=$2, updated_at=$3, state=$4 WHERE id=$5`
-	_, err := p.db.ExecContext(ctx, query, sl.Title, sl.UserId, sqlUpdatedAt, sl.State, id)
+	_, err := p.db.ExecContext(ctx, query, sl.Title, sl.UserId, &sqlUpdatedAt, sl.State, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Println(err)
 		return repository.ErrNotFound
