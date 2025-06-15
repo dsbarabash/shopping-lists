@@ -11,6 +11,8 @@ import (
 
 type service struct {
 	repository repository.Db
+	timeNower  repository.TimeNower
+	ider       repository.Ider
 }
 
 type Service interface {
@@ -27,15 +29,29 @@ type Service interface {
 	GetItemsByShoppingListId(ctx context.Context, id string) ([]*model.Item, error)
 }
 
-func NewListService(repository repository.Db) (Service, error) {
+func NewListService(repositoryDB repository.Db) (Service, error) {
 	return &service{
-		repository: repository,
+		repository: repositoryDB,
+		timeNower:  repository.NewTimeNower(),
+		ider:       repository.NewIder(),
 	}, nil
 }
 
 func (s *service) CreateShoppingList(ctx context.Context, dto *model.CreateShoppingListDTO) error {
+	slID, err := s.ider.Id()
+	if err != nil {
+		return status.Errorf(codes.Internal, err.Error())
+	}
+	dto.Id = slID
+	timeNow := s.timeNower.Now()
+	dto.CreatedAt = timeNow
+	dto.UpdatedAt = timeNow
+	if len(dto.Items) == 0 {
+		dto.Items = make([]string, 0)
+	}
+	dto.State = 2
 	sl := model.NewShoppingList(dto)
-	err := s.repository.AddShoppingList(ctx, sl)
+	err = s.repository.AddShoppingList(ctx, sl)
 	if err != nil {
 		return status.Errorf(codes.Internal, err.Error())
 	}
@@ -70,7 +86,7 @@ func (s *service) UpdateShoppingList(ctx context.Context, id string, dto *model.
 	if dto.Title == "" && len(dto.Items) == 0 && dto.UserId == "" {
 		return status.Errorf(codes.InvalidArgument, "nothing to update")
 	}
-	_, err := s.repository.GetSlById(ctx, id)
+	findList, err := s.repository.GetSlById(ctx, id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return status.Errorf(codes.NotFound, err.Error())
@@ -78,9 +94,10 @@ func (s *service) UpdateShoppingList(ctx context.Context, id string, dto *model.
 			return status.Errorf(codes.Internal, err.Error())
 		}
 	}
-	if dto.State == 1 {
+	if findList.State == 1 && dto.State != 2 {
 		return status.Errorf(codes.InvalidArgument, "impossible to update archived lists")
 	}
+	dto.UpdatedAt = s.timeNower.Now()
 	sl := model.UpdateShoppingList(dto)
 	err = s.repository.UpdateSl(ctx, id, sl)
 	if err != nil {
@@ -110,8 +127,17 @@ func (s *service) DeleteShoppingListById(ctx context.Context, id string) error {
 }
 
 func (s *service) CreateItem(ctx context.Context, dto *model.CreateItemDTO) error {
+	slID, err := s.ider.Id()
+	if err != nil {
+		return status.Errorf(codes.Internal, err.Error())
+	}
+	dto.Id = slID
+	timeNow := s.timeNower.Now()
+	dto.CreatedAt = timeNow
+	dto.UpdatedAt = timeNow
+	dto.IsDone = false
 	i := model.NewItem(dto)
-	err := s.repository.AddItem(ctx, i)
+	err = s.repository.AddItem(ctx, i)
 	if err != nil {
 		return status.Errorf(codes.Internal, err.Error())
 	}
@@ -154,6 +180,7 @@ func (s *service) UpdateItem(ctx context.Context, id string, dto *model.UpdateIt
 			return status.Errorf(codes.Internal, err.Error())
 		}
 	}
+	dto.UpdatedAt = s.timeNower.Now()
 	i := model.UpdateItem(dto)
 	err = s.repository.UpdateItem(ctx, id, i)
 	if err != nil {
