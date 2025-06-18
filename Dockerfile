@@ -17,7 +17,7 @@ COPY . .
 # Сборка исполняемого файла
 # Отсутсвие CGO_ENABLED, GOOS, GOARCH может привести к ошибке сборки приложения, однако, они не обязательны
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app main.go
-
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o client console_client/main.go
 # Второй этап: Минимальный образ для выполнения приложения
 FROM alpine:latest
 
@@ -26,6 +26,7 @@ FROM alpine:latest
 
 # Копируем исполняемый файл из предыдущего этапа
 COPY --from=builder /app/app ./
+COPY --from=builder /app/client ./
 COPY db ./db/
 
 # Открываем порт приложения
