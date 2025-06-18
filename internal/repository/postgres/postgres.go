@@ -362,10 +362,11 @@ func (p *PostgresDb) CreateUser(ctx context.Context, user *model.User) error {
 
 func (p *PostgresDb) Login(ctx context.Context, user *model.User) (string, error) {
 	row := p.db.QueryRowContext(ctx, `
-		SELECT id, name, password FROM users WHERE name = $1
+		SELECT id, name, password, state FROM users WHERE name = $1
 	`, user.Name)
-	var u []model.User
-	err := row.Scan(u)
+	var u model.User
+
+	err := row.Scan(&u.Id, &u.Name, &u.Password, &u.State)
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Println(err)
 		return "", repository.ErrNotFound
@@ -373,9 +374,9 @@ func (p *PostgresDb) Login(ctx context.Context, user *model.User) (string, error
 		log.Println(err)
 		return "", err
 	}
-	if u[0].State != 2 {
+	if u.State != 2 {
 		return "", errors.New("USER NOT ACTIVE")
-	} else if u[0].Password == user.Password && u[0].Name == user.Name {
+	} else if u.Password == user.Password && u.Name == user.Name {
 		secretKey := []byte(config.Cfg.Secret)
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"id":   user.Id,

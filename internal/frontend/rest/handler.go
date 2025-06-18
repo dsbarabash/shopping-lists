@@ -145,7 +145,7 @@ func (s *RestServer) Registration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.Id = uID.String()
-	user.State = 1
+	user.State = 2
 	err = s.UserService.CreateUser(r.Context(), &user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -245,7 +245,7 @@ func (s *RestServer) AddShoppingList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "ok"}`))
+	w.Write([]byte(`{"success": true}`))
 	return
 }
 
@@ -440,7 +440,7 @@ func (s *RestServer) AddItem(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "ok"}`))
+	w.Write([]byte(`{"success": true}`))
 	return
 }
 
