@@ -1,0 +1,36 @@
+# Первый этап: Сборка Go-приложения
+FROM golang:1.23 AS builder
+
+# Установка рабочего каталога внутри контейнера
+WORKDIR /app
+
+# Копируем файлы проекта
+# go.mod go.sum можно не прописывать (особенно если их нету в проекте)
+# Однако это ускорит процесс повторных сборок, так как докер будет использовать кэш go.mod go.sum
+# и не будет каждый раз скачивать зависимости, а только когда это необходимо
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Копируем все файлы, кроме тех что перечисленны в gitignore
+COPY . .
+
+# Сборка исполняемого файла
+# Отсутсвие CGO_ENABLED, GOOS, GOARCH может привести к ошибке сборки приложения, однако, они не обязательны
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o client console_client/main.go
+# Второй этап: Минимальный образ для выполнения приложения
+FROM alpine:latest
+
+# Установка рабочего каталога
+#WORKDIR /root/
+
+# Копируем исполняемый файл из предыдущего этапа
+COPY --from=builder /app/app ./
+COPY --from=builder /app/client ./
+COPY db ./db/
+
+# Открываем порт приложения
+EXPOSE 8989
+
+CMD ./app
+

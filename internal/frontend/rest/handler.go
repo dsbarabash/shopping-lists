@@ -12,7 +12,6 @@ import (
 	_ "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"io"
 	"log"
 	"net/http"
@@ -146,7 +145,7 @@ func (s *RestServer) Registration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.Id = uID.String()
-	user.State = 1
+	user.State = 2
 	err = s.UserService.CreateUser(r.Context(), &user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -233,17 +232,6 @@ func (s *RestServer) AddShoppingList(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": "UserId is empty"}`))
 		return
 	}
-	slID, err := uuid.NewUUID()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
-		return
-	}
-	sl.Id = slID.String()
-	sl.CreatedAt = timestamppb.Now()
-	sl.UpdatedAt = timestamppb.Now()
-	sl.Items = make([]string, 0)
-	sl.State = 2
 	err = s.Service.CreateShoppingList(r.Context(), &sl)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
@@ -257,7 +245,7 @@ func (s *RestServer) AddShoppingList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "ok"}`))
+	w.Write([]byte(`{"success": true}`))
 	return
 }
 
@@ -360,7 +348,6 @@ func (s *RestServer) UpdateShoppingListById(w http.ResponseWriter, r *http.Reque
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	sl.UpdatedAt = timestamppb.Now()
 	err = s.Service.UpdateShoppingList(r.Context(), id, sl)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
@@ -439,16 +426,7 @@ func (s *RestServer) AddItem(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": "ShoppingListId is empty"}`))
 		return
 	}
-	slID, err := uuid.NewUUID()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
-		return
-	}
-	it.Id = slID.String()
-	it.CreatedAt = timestamppb.Now()
-	it.UpdatedAt = timestamppb.Now()
-	it.IsDone = false
+
 	err = s.Service.CreateItem(r.Context(), &it)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {
@@ -462,7 +440,7 @@ func (s *RestServer) AddItem(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "ok"}`))
+	w.Write([]byte(`{"success": true}`))
 	return
 }
 
@@ -565,7 +543,6 @@ func (s *RestServer) UpdateItemById(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"success": false, "error": ` + err.Error() + `}`))
 		return
 	}
-	item.UpdatedAt = timestamppb.Now()
 	err = s.Service.UpdateItem(r.Context(), id, item)
 	if err != nil {
 		if errors.Is(err, errors.New("NOT FOUND")) {

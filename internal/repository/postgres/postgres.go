@@ -37,6 +37,35 @@ func ConnectPostgresDb() (*PostgresDb, error) {
 	return &PostgresDb{db: sqlDb}, nil
 }
 
+func ConnectPostgresDbWithRetries(maxAttempts int, delay time.Duration) (*PostgresDb, error) {
+	var db *sql.DB
+	var err error
+	cfg := config.NewPostgresConfig()
+	ctx := context.Background()
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/shopping_lists_db?sslmode=disable", cfg.Username, cfg.Password, cfg.Host, cfg.Port)
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		db, err = sql.Open("pgx", dsn)
+		if err != nil {
+			log.Printf("Attempt %d: connection error: %v", attempt, err)
+			time.Sleep(delay)
+			continue
+		}
+
+		err = db.PingContext(ctx)
+		if err == nil {
+			log.Printf("Successfully connected after %d attempts", attempt)
+			return &PostgresDb{db: db}, nil
+		}
+
+		log.Printf("Attempt %d: ping failed: %v", attempt, err)
+		db.Close()
+		time.Sleep(delay)
+	}
+
+	return nil, err
+}
+
 func (p *PostgresDb) Migrate(ctx context.Context, migrate string) (err error) {
 	//	goose.SetBaseFS(embedMigrations)
 
@@ -333,10 +362,11 @@ func (p *PostgresDb) CreateUser(ctx context.Context, user *model.User) error {
 
 func (p *PostgresDb) Login(ctx context.Context, user *model.User) (string, error) {
 	row := p.db.QueryRowContext(ctx, `
-		SELECT id, name, password FROM users WHERE name = $1
+		SELECT id, name, password, state FROM users WHERE name = $1
 	`, user.Name)
-	var u []model.User
-	err := row.Scan(u)
+	var u model.User
+
+	err := row.Scan(&u.Id, &u.Name, &u.Password, &u.State)
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Println(err)
 		return "", repository.ErrNotFound
@@ -344,9 +374,9 @@ func (p *PostgresDb) Login(ctx context.Context, user *model.User) (string, error
 		log.Println(err)
 		return "", err
 	}
-	if u[0].State != 2 {
+	if u.State != 2 {
 		return "", errors.New("USER NOT ACTIVE")
-	} else if u[0].Password == user.Password && u[0].Name == user.Name {
+	} else if u.Password == user.Password && u.Name == user.Name {
 		secretKey := []byte(config.Cfg.Secret)
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"id":   user.Id,

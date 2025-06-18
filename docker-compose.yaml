@@ -15,10 +15,19 @@ services:
 
   postgres:
     image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: shopping_lists_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/data
+
+  shopping-list-app:
+    build: .
+    ports:
+      - "8989:8989"
 
 volumes:
   mongodb_data:
